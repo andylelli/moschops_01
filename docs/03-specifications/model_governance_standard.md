@@ -25,6 +25,18 @@ Define the validation, promotion, rollback, and retraining rules for AI models.
 - No regression in drawdown, risk behavior, or calibration.
 - Feature schema must match runtime inference exactly.
 
+## Numeric Promotion Thresholds
+
+- **Out-of-Sample Improvement**:
+  - Minimum 5% improvement in selected performance metrics (e.g., Sharpe ratio, Brier score).
+- **Drawdown Regression**:
+  - Maximum allowable increase: 2% relative to the active model.
+- **Minimum Trade Count**:
+  - At least 500 trades in validation data.
+- **Calibration Targets**:
+  - Brier score ≤ 0.2.
+  - Reliability bins within ±5% of ideal calibration.
+
 ## Rollback Criteria
 - Any material regression in live behavior.
 - Model-serving failure that affects decision flow.

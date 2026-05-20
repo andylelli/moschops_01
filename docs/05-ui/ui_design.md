@@ -213,7 +213,6 @@ Required contracts by component type:
 	- Must avoid ambiguous color-only signaling.
 - Metric components (`MetricCard`, `DeltaPill`, `DriftIndicator`):
 	- Must display value, unit, time basis, and directional delta policy.
-	- Must support missing data fallback (`N/A` + reason tooltip).
 - Data table components (`SignalDecisionTable`, `TradeLedgerTable`, `RiskEventTimeline`):
 	- Must support sorting, filtering, pagination/virtualization.
 	- Must persist column visibility preferences.
@@ -288,6 +287,13 @@ Update rules:
 - Incremental updates preferred over full re-render.
 - Preserve row selection and scroll position on data refresh.
 - Apply optimistic UI only for local preference actions (not risk/system status).
+
+### Missing Data Fallback
+
+For unavailable data:
+1. Display `N/A` with a tooltip explaining the reason (e.g., "Data unavailable due to backend timeout").
+2. Use a neutral color to avoid misinterpretation as an error.
+3. Log the fallback event for operator review.
 
 ## 10. View-by-View Design
 Overview:

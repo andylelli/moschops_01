@@ -112,6 +112,13 @@ Sizing model:
 - Cross-currency conversion supported via `c_fx`
 - Reject trade when metadata is missing/inconsistent
 
+### Metadata Validation Policy
+
+If symbol metadata (`tickSize`, `tickValueAccountCcy`, `contractSize`) is missing or inconsistent:
+1. Reject the trade with a `MISSING_METADATA` error.
+2. Log the rejection in the `rejected_signals` table with the reason code.
+3. Notify the operator via the dashboard with actionable details.
+
 ## 6. Data Model (v1)
 Core tables:
 - `strategy_configs`
@@ -198,3 +205,11 @@ Core views:
 - Trade and signal ledger (accepted + rejected with reasons, live open trades from backend API).
 - AI monitoring (score distribution, drift proxy indicators).
 - Risk and safety panel (kill-switch status/events, connectivity health).
+
+### Risk Decision Flow
+
+The risk engine evaluates trades in two stages:
+1. **Signal-level vetoes**: Applied during `/signal` processing.
+2. **Account-level checks**: Applied during `/risk-check` processing.
+
+This ensures that immediate strategy constraints are enforced early, while detailed account-level evaluations occur before execution.

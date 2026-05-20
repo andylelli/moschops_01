@@ -14,7 +14,15 @@ Coverage: `v2.0` to `v2.1` from `../01-roadmap/coding_plan.md`
 - [7. Reliability and Security](#7-reliability-and-security)
 - [8. Testing and Acceptance](#8-testing-and-acceptance)
 - [9. Alignment with Coding Plan](#9-alignment-with-coding-plan)
-- [10. UI Evolution (v2.x)](#10-ui-evolution-v2x)
+- [10. UI Evolution (v2.x)]
+
+### AI Fallback Behavior in Multi-Strategy
+
+Each strategy in the multi-strategy runtime can define its AI dependency as:
+1. **Mandatory**: Strategy execution pauses if AI inference is unavailable.
+2. **Optional**: Strategy falls back to rule-based execution if AI inference is unavailable.
+
+The strategy registry must enforce these settings and log fallback events for auditability.
 
 ## Progress Table
 | Step | Version target | Related tech | Implementation language/runtime | Component placement | Status | Notes |

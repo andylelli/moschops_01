@@ -39,6 +39,14 @@ Last updated: 2026-05-20
 - [11. Risks to Track Continuously](#11-risks-to-track-continuously)
 - [12. Suggested Repository Tasks Board](#12-suggested-repository-tasks-board)
 
+### Logging Requirements
+
+All logs must:
+1. Include `decisionId`, `signalId`, and `tradeId` for traceability.
+2. Capture feature vectors and model predictions for retraining lineage.
+
+Missing logs must trigger an alert and block promotion to the next environment.
+
 ## 1. Goal
 Build a modular MT5 trading platform where shared services (execution, risk, logging, AI inference, retraining) support one or more strategy plug-ins.
 
@@ -670,7 +678,6 @@ AI/Training:
 - Underestimated spread/slippage assumptions
 - Overfitting due to weak walk-forward controls
 - Broker symbol spec differences causing invalid sizing
-- Missing logs that break audit or retraining lineage
 
 ## 12. Suggested Repository Tasks Board
 Columns:

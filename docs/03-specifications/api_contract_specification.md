@@ -92,3 +92,17 @@ Returns backend dependency status.
 - 409: duplicate or conflicting decision key
 - 422: semantically invalid request
 - 500: unexpected server failure
+
+### Risk Decision Flow
+
+The `/signal` endpoint includes preliminary risk checks for immediate vetoes (e.g., capital limits, kill-switch triggers). The `/risk-check` endpoint provides a secondary, detailed evaluation for proposed trades.
+
+#### Flow Order:
+1. `/signal` evaluates:
+   - Strategy-level constraints.
+   - Immediate veto conditions.
+2. `/risk-check` evaluates:
+   - Account-level exposure.
+   - Adjusted trade sizes.
+
+Both endpoints must log their decisions for auditability.

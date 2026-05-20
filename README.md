@@ -7,3 +7,4 @@ Implementation plan:
 - [docs/05-ui/ui_design.md](docs/05-ui/ui_design.md)
 - [docs/00-governance/documentation_checklist.md](docs/00-governance/documentation_checklist.md)
 - [docs/00-governance/documentation_governance.md](docs/00-governance/documentation_governance.md)
+- [docs/00-governance/implementation_runbook.md](docs/00-governance/implementation_runbook.md)

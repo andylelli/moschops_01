@@ -25,9 +25,9 @@ Track the minimum documentation set required for a production-grade, auditable t
 | DOC-06 | Security and Access Control | P0 | Security + Platform Lead | Not started | Roles/permissions matrix, secret handling, environment boundaries, and threat model included | `../04-operations/security_and_access_control.md` |
 | DOC-07 | Incident and Operations Runbooks | P0 | Ops Lead | Not started | Playbooks for backend/DB/model failures and kill-switch events with triage/escalation/recovery checks | `../04-operations/incident_and_operations_runbooks.md` |
 | DOC-08 | SLO/SLI and Alerting Matrix | P0 | SRE/Ops Lead | Not started | SLI definitions, SLO targets, alert thresholds, routing policy, and required operator actions documented | `../04-operations/slo_sli_and_alerting_matrix.md` |
-| DOC-09 | Release and Change Management Guide | P1 | Tech Lead + Release Manager | Not started | Versioning scheme, release checklist, migration rollback, and model deployment rollback procedures | `../01-roadmap/coding_plan.md`, `../02-architecture/lld_v2.md` |
+| DOC-09 | Release and Change Management Guide | P1 | Tech Lead + Release Manager | Not started | Versioning scheme, release checklist, migration rollback, and model deployment rollback procedures | `../01-roadmap/release_and_change_management.md` |
 | DOC-10 | Frontend Implementation Addendum | P1 | Frontend Lead | Not started | Component-level acceptance criteria, state behavior matrix, and accessibility/theme compliance checklist | `../05-ui/ui_design.md`, `../02-architecture/lld_v1.md`, `../02-architecture/lld_v2.md` |
-| DOC-11 | Environment and Deployment Topology | P1 | Platform Lead | Not started | Dev/demo/pilot/live topology, config policy, feature flags, and promotion gates documented | `../01-roadmap/coding_plan.md`, `../02-architecture/lld_v2.md` |
+| DOC-11 | Environment and Deployment Topology | P1 | Platform Lead | Not started | Dev/demo/pilot/live topology, config policy, feature flags, and promotion gates documented | `../04-operations/environment_and_deployment_topology.md` |
 | DOC-12 | Documentation Governance Standard | P2 | Tech Lead | Not started | Source-of-truth mapping, PR update policy, templates, and review checklist for future docs | `documentation_governance.md` |
 
 ## Current Core Docs (Reference)

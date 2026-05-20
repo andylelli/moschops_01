@@ -1,8 +1,9 @@
 # moschops
 
 Implementation plan:
-- [docs/CODING_PLAN.md](docs/CODING_PLAN.md)
-- [docs/LLD_v1.md](docs/LLD_v1.md)
-- [docs/LLD_v2.md](docs/LLD_v2.md)
-- [docs/UI_DESIGN.md](docs/UI_DESIGN.md)
-- [docs/DOCUMENT_CHECKLIST.md](docs/DOCUMENT_CHECKLIST.md)
+- [docs/01-roadmap/coding_plan.md](docs/01-roadmap/coding_plan.md)
+- [docs/02-architecture/lld_v1.md](docs/02-architecture/lld_v1.md)
+- [docs/02-architecture/lld_v2.md](docs/02-architecture/lld_v2.md)
+- [docs/05-ui/ui_design.md](docs/05-ui/ui_design.md)
+- [docs/00-governance/documentation_checklist.md](docs/00-governance/documentation_checklist.md)
+- [docs/00-governance/documentation_governance.md](docs/00-governance/documentation_governance.md)

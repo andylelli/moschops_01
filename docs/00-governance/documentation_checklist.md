@@ -17,24 +17,24 @@ Track the minimum documentation set required for a production-grade, auditable t
 
 | ID | Document Item | Priority | Owner | Status | Done Criteria | Existing Source / Link |
 |---|---|---|---|---|---|---|
-| DOC-01 | Requirements Traceability Matrix | P0 | Product + Tech Lead | Not started | All major requirements mapped to phase/version, LLD section, and test evidence; includes verification status field | `docs/CODING_PLAN.md`, `docs/LLD_v1.md`, `docs/LLD_v2.md` |
-| DOC-02 | API Contract Specification | P0 | Backend Lead | Not started | OpenAPI specs for all endpoints; idempotency and retry semantics documented; complete error code catalog | `docs/LLD_v1.md` |
-| DOC-03 | Data Dictionary and Lineage | P0 | Data/Backend Lead | Not started | Table/field definitions with source and usage; lineage for decision/model/label keys; retention policy included | `docs/LLD_v1.md`, `docs/LLD_v2.md` |
-| DOC-04 | Model Governance Standard | P0 | ML Lead | Not started | Validation methodology, leakage controls, promotion/rollback thresholds, and retraining cadence fully defined | `docs/LLD_v1.md`, `docs/LLD_v2.md` |
-| DOC-05 | Backtest and Validation Methodology | P0 | Quant/Strategy Lead | Not started | Cost assumptions, OOS thresholds, and anti-overfitting controls documented with pass/fail criteria | `docs/CODING_PLAN.md`, `docs/LLD_v1.md` |
-| DOC-06 | Security and Access Control | P0 | Security + Platform Lead | Not started | Roles/permissions matrix, secret handling, environment boundaries, and threat model included | `docs/LLD_v2.md` |
-| DOC-07 | Incident and Operations Runbooks | P0 | Ops Lead | Not started | Playbooks for backend/DB/model failures and kill-switch events with triage/escalation/recovery checks | `docs/CODING_PLAN.md`, `docs/LLD_v1.md` |
-| DOC-08 | SLO/SLI and Alerting Matrix | P0 | SRE/Ops Lead | Not started | SLI definitions, SLO targets, alert thresholds, routing policy, and required operator actions documented | `docs/CODING_PLAN.md`, `docs/LLD_v2.md` |
-| DOC-09 | Release and Change Management Guide | P1 | Tech Lead + Release Manager | Not started | Versioning scheme, release checklist, migration rollback, and model deployment rollback procedures | `docs/CODING_PLAN.md`, `docs/LLD_v2.md` |
-| DOC-10 | Frontend Implementation Addendum | P1 | Frontend Lead | Not started | Component-level acceptance criteria, state behavior matrix, and accessibility/theme compliance checklist | `docs/UI_DESIGN.md`, `docs/LLD_v1.md`, `docs/LLD_v2.md` |
-| DOC-11 | Environment and Deployment Topology | P1 | Platform Lead | Not started | Dev/demo/pilot/live topology, config policy, feature flags, and promotion gates documented | `docs/CODING_PLAN.md`, `docs/LLD_v2.md` |
-| DOC-12 | Documentation Governance Standard | P2 | Tech Lead | Not started | Source-of-truth mapping, PR update policy, templates, and review checklist for future docs | `docs/` |
+| DOC-01 | Requirements Traceability Matrix | P0 | Product + Tech Lead | Not started | All major requirements mapped to phase/version, LLD section, and test evidence; includes verification status field | `requirements_traceability_matrix.md` |
+| DOC-02 | API Contract Specification | P0 | Backend Lead | Not started | OpenAPI specs for all endpoints; idempotency and retry semantics documented; complete error code catalog | `../03-specifications/api_contract_specification.md` |
+| DOC-03 | Data Dictionary and Lineage | P0 | Data/Backend Lead | Not started | Table/field definitions with source and usage; lineage for decision/model/label keys; retention policy included | `../03-specifications/data_dictionary_and_lineage.md` |
+| DOC-04 | Model Governance Standard | P0 | ML Lead | Not started | Validation methodology, leakage controls, promotion/rollback thresholds, and retraining cadence fully defined | `../03-specifications/model_governance_standard.md` |
+| DOC-05 | Backtest and Validation Methodology | P0 | Quant/Strategy Lead | Not started | Cost assumptions, OOS thresholds, and anti-overfitting controls documented with pass/fail criteria | `../03-specifications/backtest_and_validation_methodology.md` |
+| DOC-06 | Security and Access Control | P0 | Security + Platform Lead | Not started | Roles/permissions matrix, secret handling, environment boundaries, and threat model included | `../04-operations/security_and_access_control.md` |
+| DOC-07 | Incident and Operations Runbooks | P0 | Ops Lead | Not started | Playbooks for backend/DB/model failures and kill-switch events with triage/escalation/recovery checks | `../04-operations/incident_and_operations_runbooks.md` |
+| DOC-08 | SLO/SLI and Alerting Matrix | P0 | SRE/Ops Lead | Not started | SLI definitions, SLO targets, alert thresholds, routing policy, and required operator actions documented | `../04-operations/slo_sli_and_alerting_matrix.md` |
+| DOC-09 | Release and Change Management Guide | P1 | Tech Lead + Release Manager | Not started | Versioning scheme, release checklist, migration rollback, and model deployment rollback procedures | `../01-roadmap/coding_plan.md`, `../02-architecture/lld_v2.md` |
+| DOC-10 | Frontend Implementation Addendum | P1 | Frontend Lead | Not started | Component-level acceptance criteria, state behavior matrix, and accessibility/theme compliance checklist | `../05-ui/ui_design.md`, `../02-architecture/lld_v1.md`, `../02-architecture/lld_v2.md` |
+| DOC-11 | Environment and Deployment Topology | P1 | Platform Lead | Not started | Dev/demo/pilot/live topology, config policy, feature flags, and promotion gates documented | `../01-roadmap/coding_plan.md`, `../02-architecture/lld_v2.md` |
+| DOC-12 | Documentation Governance Standard | P2 | Tech Lead | Not started | Source-of-truth mapping, PR update policy, templates, and review checklist for future docs | `documentation_governance.md` |
 
 ## Current Core Docs (Reference)
-- `docs/CODING_PLAN.md`
-- `docs/LLD_v1.md`
-- `docs/LLD_v2.md`
-- `docs/UI_DESIGN.md`
+- `../01-roadmap/coding_plan.md`
+- `../02-architecture/lld_v1.md`
+- `../02-architecture/lld_v2.md`
+- `../05-ui/ui_design.md`
 
 ## Suggested Review Cadence
 - Weekly during active build phases (v1.0-v1.3)

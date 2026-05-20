@@ -2,7 +2,7 @@
 
 Version: 1.0
 Last updated: 2026-05-20
-Coverage: `v2.0` to `v2.1` from `docs/CODING_PLAN.md`
+Coverage: `v2.0` to `v2.1` from `../01-roadmap/coding_plan.md`
 
 ## Contents
 - [1. Scope](#1-scope)
@@ -38,7 +38,7 @@ In scope:
 - `v2.1`: Managed Azure migration, environment promotion, and SLO operations
 
 Depends on:
-- All `v1.x` controls and contracts from `docs/LLD_v1.md`
+- All `v1.x` controls and contracts from `lld_v1.md`
 
 ## 2. v2.0 Architecture Delta
 New capabilities over v1:
@@ -163,8 +163,8 @@ v2.1 acceptance:
 
 ## 9. Alignment with Coding Plan
 Version mapping:
-- `v2.0` aligns to `Phase 11` and `Phase 12` in `docs/CODING_PLAN.md`
-- `v2.1` aligns to `Phase 13` in `docs/CODING_PLAN.md`
+- `v2.0` aligns to `Phase 11` and `Phase 12` in `../01-roadmap/coding_plan.md`
+- `v2.1` aligns to `Phase 13` in `../01-roadmap/coding_plan.md`
 
 Compatibility rule:
 - v2 does not replace v1 safeguards; it layers orchestration and managed operations on top.

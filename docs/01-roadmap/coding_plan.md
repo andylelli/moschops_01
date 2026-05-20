@@ -64,10 +64,10 @@ Release tracks:
 This repository treats the documents as a layered specification, not as interchangeable notes.
 
 Authority order:
-1. `docs/LLD_v1.md` and `docs/LLD_v2.md` define implementation behavior.
-2. `docs/UI_DESIGN.md` defines operator-facing UX and presentation rules.
-3. `docs/CODING_PLAN.md` defines the delivery roadmap and phased implementation intent.
-4. `docs/DOCUMENT_CHECKLIST.md` defines documentation completion status and governance tracking.
+1. `../02-architecture/lld_v1.md` and `../02-architecture/lld_v2.md` define implementation behavior.
+2. `../05-ui/ui_design.md` defines operator-facing UX and presentation rules.
+3. `coding_plan.md` defines the delivery roadmap and phased implementation intent.
+4. `../00-governance/documentation_checklist.md` defines documentation completion status and governance tracking.
 
 Reading rules:
 - Section 2.1 is preserved as historical baseline material.
@@ -264,8 +264,8 @@ Contains:
 - Backup/restore automation and operational SLO monitoring
 
 Design-spec alignment:
-- Detailed LLD for `v1.0` to `v1.3`: `docs/LLD_v1.md`
-- Detailed LLD for `v2.0` to `v2.1`: `docs/LLD_v2.md`
+- Detailed LLD for `v1.0` to `v1.3`: `../02-architecture/lld_v1.md`
+- Detailed LLD for `v2.0` to `v2.1`: `../02-architecture/lld_v2.md`
 
 ## 4. Phase Plan (Mapped to Versions)
 
@@ -280,7 +280,7 @@ Tasks:
   - `training/` (Python training pipelines)
   - `models/` (ONNX artifacts + metadata)
   - `dashboard/` (Vue 3 + Tailwind CSS)
-  - `docs/` (HLD, runbooks, ADRs)
+  - `../` (HLD, runbooks, ADRs)
 - Add initial tooling:
   - TypeScript config, linting, formatting
   - `.env.example`
@@ -410,7 +410,7 @@ Tasks:
 - Identify stable parameter zones, not single-point optimizations.
 
 Deliverables:
-- Baseline validation report in `docs/validation/baseline.md`
+- Baseline validation report in `../validation/baseline.md`
 - Exported signal/outcome dataset for ML
 
 Exit criteria:

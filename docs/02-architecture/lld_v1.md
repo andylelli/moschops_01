@@ -2,7 +2,7 @@
 
 Version: 1.0
 Last updated: 2026-05-20
-Coverage: `v1.0` to `v1.3` from `docs/CODING_PLAN.md`
+Coverage: `v1.0` to `v1.3` from `../01-roadmap/coding_plan.md`
 
 ## Contents
 - [1. Scope](#1-scope)
@@ -50,6 +50,13 @@ Processes:
 - PostgreSQL
 - Python training jobs
 
+Open trade info bridge:
+- MQL5 EA collects open trade/order/account info using MQL5 functions (e.g., `PositionsTotal()`, `PositionGetTicket()`, etc.).
+- EA serializes open trade data as JSON and sends it via HTTP POST (`WebRequest`) to backend endpoint (`/api/trades/open`).
+- Backend authenticates, parses, and persists open trade info (PostgreSQL or cache).
+- Backend exposes `GET /api/trades/open` for frontend consumption.
+- Frontend (Vue 3) fetches and displays open trades in the "Trades and Signals" view.
+
 Flow:
 1. EA detects new completed D1 candle.
 2. EA sends market/account snapshot to `POST /signal`.
@@ -82,6 +89,8 @@ Mandatory endpoints:
 - `GET /model-version`
 - `GET /performance`
 - `GET /health`
+- `POST /trades/open` (from EA, open trade snapshot)
+- `GET /trades/open` (for dashboard, current open trades)
 
 Idempotency and traceability:
 - `decisionKey = strategyId + symbol + timeframe + barCloseTimeUtc`
@@ -160,7 +169,7 @@ Minimum gates:
 - Validation: multi-symbol, multi-regime, realistic costs, gap stress tests
 
 Quality notes:
-- This v1 LLD is aligned to `docs/CODING_PLAN.md` phases 0 through 10.
+- This v1 LLD is aligned to `../01-roadmap/coding_plan.md` phases 0 through 10.
 - Relearning cadence and drift-trigger retraining are intentionally explicit for live operations.
 - Safety controls are fail-closed for new entries when critical dependencies are unavailable.
 
@@ -186,6 +195,6 @@ UI requirements:
 
 Core views:
 - Portfolio overview (equity, drawdown, PnL).
-- Trade and signal ledger (accepted + rejected with reasons).
+- Trade and signal ledger (accepted + rejected with reasons, live open trades from backend API).
 - AI monitoring (score distribution, drift proxy indicators).
 - Risk and safety panel (kill-switch status/events, connectivity health).

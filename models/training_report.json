@@ -1,0 +1,16 @@
+{
+  "generatedAtUtc": "2026-05-20T20:09:44.991629+00:00",
+  "model": "logreg",
+  "onnxPath": "/workspaces/moschops/models/daily_breakout_model.onnx",
+  "metrics": {
+    "auc_mean": 0.744701977911613,
+    "auc_min": 0.7056783536585365,
+    "brier_mean": 0.19695920147636614,
+    "brier_max": 0.21008759919903555
+  },
+  "calibration": {
+    "bins": 10,
+    "trueMean": 0.5009878797438071,
+    "predMean": 0.4968553803016526
+  }
+}

@@ -11,6 +11,14 @@ Define the minimum backtest and validation standards before AI or live rollout.
 - Use realistic spread, commission, and slippage assumptions.
 - Test across multiple symbols and market regimes.
 - Avoid cherry-picked single-window optimization.
+- Use real historical data for strategy validation and model promotion decisions.
+
+## Data Collection Requirements
+
+- Primary source for operational validation data: MT5 terminal and broker history.
+- Store bars, signal payload features, execution quality, and outcomes in PostgreSQL.
+- Ensure runtime/training feature parity, including required volatility input.
+- Keep immutable lineage keys so any training row can be traced to original signal and outcome.
 
 ## Required Checks
 - No look-ahead bias.

@@ -24,6 +24,13 @@ Define the infrastructure topology and promotion gates for the trading platform 
    - Access: Ops, limited developer access.
    - Infrastructure: Cloud-hosted, high availability.
 
+## MT5 Placement and Data Flow
+
+- MT5 terminal runs on Windows host (local workstation, VPS, or Windows VM).
+- Backend, database, and training services run on Linux host or containerized stack.
+- EA sends signal and open-trade snapshots to backend APIs over approved WebRequest endpoints.
+- Historical and execution data from MT5 must be exported or streamed into PostgreSQL for training lineage.
+
 ## Promotion Gates
 - **Dev → Demo**:
   - All unit and integration tests pass.
@@ -38,3 +45,4 @@ Define the infrastructure topology and promotion gates for the trading platform 
 ## Notes
 - All environments must use separate credentials and secrets.
 - Deployment pipelines must enforce promotion gates.
+- Demo and higher environments require validated MT5-to-backend connectivity before promotion.

@@ -65,6 +65,10 @@ Flow:
 5. EA performs local safety checks and executes via `CTrade`.
 6. Backend persists signal/trade/risk/model logs for audit and retraining.
 
+Startup model contract check:
+- Backend startup includes model inference preflight to validate ONNX output compatibility.
+- `GET /health` must expose model loader state as `available` or `degraded`.
+
 ## 3. Strategy Logic (Daily Breakout)
 Signal rules (completed bars only):
 - Long: `Close[1] > SMA200[1]` and `Close[1] > HighestHigh(55, bars 2..56)`.
@@ -72,6 +76,11 @@ Signal rules (completed bars only):
 - Exit long: `Close[1] < SMA100[1]`.
 - Exit short: `Close[1] > SMA100[1]`.
 - Stop: `2.5 * ATR20[1]` from entry.
+
+Feature parity requirements:
+- Runtime inference feature schema must match training schema exactly.
+- `volatility` is required in signal payload and must be rolling return volatility from completed bars.
+- ATR is not a substitute for volatility in model input.
 
 Execution guards:
 - Gap guard: reject if `abs(open[0]-close[1]) / ATR20[1] > maxGapAtr`.
@@ -96,6 +105,8 @@ Idempotency and traceability:
 - `decisionKey = strategyId + symbol + timeframe + barCloseTimeUtc`
 - `decisionId` immutable client UUID for request correlation
 - Response must include `decisionId`, `signalId`, `barCloseTimeUtc`, `evaluatedAtUtc`
+- Duplicate signal writes must return the previously persisted response (idempotent replay behavior).
+- Portfolio evaluations must persist atomically and support replay-safe idempotency via decision ID or request hash.
 
 ## 5. Risk Engine
 Core controls:

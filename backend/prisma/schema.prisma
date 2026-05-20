@@ -1,0 +1,219 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DecisionAction {
+  BUY
+  SELL
+  HOLD
+  CLOSE
+  REDUCE
+}
+
+model StrategyConfig {
+  id              String   @id @default(cuid())
+  strategyId      String
+  strategyVersion String
+  riskProfile     String?
+  configJson      Json
+  createdAt       DateTime @default(now())
+}
+
+model ModelVersion {
+  id                String   @id @default(cuid())
+  strategyId        String
+  strategyVersion   String
+  modelVersion      String   @unique
+  lifecycleState    String
+  featureSchemaHash String?
+  metadataJson      Json?
+  createdAt         DateTime @default(now())
+}
+
+model Signal {
+  id              String         @id @default(cuid())
+  decisionId      String         @unique
+  signalId        String         @unique
+  decisionKey     String         @unique
+  strategyId      String
+  strategyVersion String
+  modelVersion    String?
+  symbol          String
+  timeframe       String
+  action          DecisionAction
+  barCloseTimeUtc DateTime
+  evaluatedAtUtc  DateTime
+  requestJson     Json
+  responseJson    Json
+  createdAt       DateTime       @default(now())
+}
+
+model RejectedSignal {
+  id              String   @id @default(cuid())
+  decisionId      String
+  signalId        String?
+  strategyId      String
+  strategyVersion String
+  symbol          String
+  timeframe       String
+  reasonCode      String
+  detailsJson     Json?
+  createdAt       DateTime @default(now())
+}
+
+model Feature {
+  id             String   @id @default(cuid())
+  decisionId     String
+  featureHash    String?
+  datasetVersion String?
+  featureJson    Json
+  createdAt      DateTime @default(now())
+}
+
+model ModelPrediction {
+  id              String   @id @default(cuid())
+  decisionId      String
+  strategyId      String
+  modelVersion    String
+  predictionScore Float
+  predictionClass Int?
+  createdAt       DateTime @default(now())
+}
+
+model Trade {
+  id              String   @id @default(cuid())
+  tradeId         String   @unique
+  decisionId      String?
+  signalId        String?
+  strategyId      String
+  strategyVersion String
+  symbol          String
+  side            String
+  volume          Float
+  entryPrice      Float
+  stopPrice       Float?
+  takeProfitPrice Float?
+  spread          Float?
+  slippage        Float?
+  commission      Float?
+  swap            Float?
+  status          String
+  closeReason     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Position {
+  id              String   @id @default(cuid())
+  positionId      String   @unique
+  strategyId      String
+  strategyVersion String
+  symbol          String
+  side            String
+  volume          Float
+  averagePrice    Float
+  stopPrice       Float?
+  takeProfitPrice Float?
+  unrealizedPnl   Float?
+  isOpen          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model RiskEvent {
+  id              String   @id @default(cuid())
+  decisionId      String?
+  strategyId      String?
+  eventType       String
+  reasonCode      String
+  severity        String
+  detailsJson     Json?
+  createdAt       DateTime @default(now())
+}
+
+model AccountSnapshot {
+  id             String   @id @default(cuid())
+  accountId      String
+  equity         Float?
+  balance        Float?
+  marginUsed     Float?
+  freeMargin     Float?
+  openRisk       Float?
+  snapshotJson   Json
+  capturedAtUtc  DateTime
+  createdAt      DateTime @default(now())
+}
+
+model TrainingRun {
+  id             String   @id @default(cuid())
+  trainingRunId  String   @unique
+  strategyId     String
+  modelVersion   String?
+  datasetVersion String?
+  status         String
+  metricsJson    Json?
+  createdAt      DateTime @default(now())
+}
+
+model OutcomeLabel {
+  id            String   @id @default(cuid())
+  signalId      String
+  labelVersion  String
+  labelValue    Int
+  horizonBars   Int
+  createdAt     DateTime @default(now())
+}
+
+model PerformanceSnapshot {
+  id             String   @id @default(cuid())
+  strategyId     String
+  strategyVersion String?
+  modelVersion   String?
+  expectancy     Float?
+  profitFactor   Float?
+  sharpe         Float?
+  maxDrawdown    Float?
+  tradeCount     Int?
+  snapshotJson   Json
+  capturedAtUtc  DateTime
+  createdAt      DateTime @default(now())
+}
+
+model OpenTradeSnapshot {
+  id            String   @id @default(cuid())
+  accountId     String?
+  strategyId    String?
+  symbol        String?
+  snapshotJson  Json
+  capturedAtUtc DateTime
+  createdAt     DateTime @default(now())
+}
+
+model PortfolioDecision {
+  portfolioDecisionId String                  @id
+  requestHash         String                  @unique
+  accountId           String
+  requestJson         Json
+  approvedPlans       String[]
+  rejectedPlans       Json
+  remainingRiskBudget Float
+  remainingTradeSlots Int
+  evaluatedAtUtc      DateTime
+  createdAt           DateTime                @default(now())
+  items               PortfolioDecisionItem[]
+}
+
+model PortfolioDecisionItem {
+  id                  String            @id @default(cuid())
+  portfolioDecisionId String
+  decisionId          String
+  approved            Boolean
+  reasonCodes         String[]
+  createdAt           DateTime          @default(now())
+  portfolioDecision   PortfolioDecision @relation(fields: [portfolioDecisionId], references: [portfolioDecisionId], onDelete: Cascade)
+}

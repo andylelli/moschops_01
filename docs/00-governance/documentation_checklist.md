@@ -18,7 +18,7 @@ Track the minimum documentation set required for a production-grade, auditable t
 | ID | Document Item | Priority | Owner | Status | Done Criteria | Existing Source / Link |
 |---|---|---|---|---|---|---|
 | DOC-01 | Requirements Traceability Matrix | P0 | Product + Tech Lead | Not started | All major requirements mapped to phase/version, LLD section, and test evidence; includes verification status field | `requirements_traceability_matrix.md` |
-| DOC-02 | API Contract Specification | P0 | Backend Lead | Not started | OpenAPI specs for all endpoints; idempotency and retry semantics documented; complete error code catalog | `../03-specifications/api_contract_specification.md` |
+| DOC-02 | API Contract Specification | P0 | Backend Lead | In progress | OpenAPI specs for all endpoints; idempotency and retry semantics documented; complete error code catalog | `../03-specifications/api_contract_specification.md` |
 | DOC-03 | Data Dictionary and Lineage | P0 | Data/Backend Lead | Not started | Table/field definitions with source and usage; lineage for decision/model/label keys; retention policy included | `../03-specifications/data_dictionary_and_lineage.md` |
 | DOC-04 | Model Governance Standard | P0 | ML Lead | Not started | Validation methodology, leakage controls, promotion/rollback thresholds, and retraining cadence fully defined | `../03-specifications/model_governance_standard.md` |
 | DOC-05 | Backtest and Validation Methodology | P0 | Quant/Strategy Lead | Not started | Cost assumptions, OOS thresholds, and anti-overfitting controls documented with pass/fail criteria | `../03-specifications/backtest_and_validation_methodology.md` |

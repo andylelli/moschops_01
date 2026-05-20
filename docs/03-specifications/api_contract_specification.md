@@ -28,12 +28,22 @@ Define the backend HTTP contract used by the EA, backend services, and dashboard
 Request fields:
 - decisionId
 - strategyId
+- strategyVersion
 - symbol
 - timeframe
 - barCloseTimeUtc
 - marketSnapshot
 - accountSnapshot
 - optional feature payload
+
+Signal feature requirements:
+- `marketSnapshot.volatility` is required and must represent rolling return volatility from completed bars.
+- Runtime feature vector must match training schema exactly:
+  - `trend_strength`
+  - `volatility`
+  - `spread_atr`
+  - `breakout_distance`
+  - `momentum`
 
 Response fields:
 - decisionId
@@ -42,6 +52,13 @@ Response fields:
 - riskDecision
 - reasonCodes
 - evaluatedAtUtc
+
+AI reason code behavior:
+- `AI_SCORE_APPLIED` when score thresholds were applied.
+- `AI_HALF_SIZE` and `AI_SKIP` for score-band decisions.
+- `AI_MODEL_UNAVAILABLE` when model is unavailable/degraded.
+- `AI_INFERENCE_ERROR` when runtime inference fails.
+- `AI_INVALID_FEATURES` when feature payload is invalid.
 
 ### POST /risk-check
 Request fields:
@@ -56,6 +73,27 @@ Response fields:
 - vetoReasonCodes
 - adjustedSize
 - evaluatedAtUtc
+
+### POST /portfolio/evaluate
+Request fields:
+- accountSnapshot
+- plans[]
+- maxOpenRisk
+- maxOpenTrades
+- optional `portfolioDecisionId`
+
+Response fields:
+- portfolioDecisionId
+- approvedPlans
+- rejectedPlans
+- remainingRiskBudget
+- remainingTradeSlots
+- evaluatedAtUtc
+
+Persistence and idempotency semantics:
+- Evaluation results are persisted atomically (decision + decision items).
+- Replays with matching request payload return the existing `portfolioDecisionId` and cached result.
+- If `portfolioDecisionId` is supplied and already exists, cached result is returned.
 
 ### POST /log-signal
 Persists accepted or rejected signal records.
@@ -81,9 +119,14 @@ Returns performance snapshots, risk events, and summary metrics.
 ### GET /health
 Returns backend dependency status.
 
+Health telemetry requirements:
+- `telemetry.modelLoader` returns `available` or `degraded`.
+- `telemetry.modelReason` provides degradation reason when applicable.
+
 ## Idempotency
 - decisionKey = strategyId + symbol + timeframe + barCloseTimeUtc
 - Replays with the same decisionId must not create duplicate business records.
+- Portfolio evaluations are idempotent by explicit `portfolioDecisionId` or stable request hash.
 
 ## Status Codes
 - 200: successful read or accepted write

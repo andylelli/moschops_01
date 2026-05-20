@@ -12,6 +12,25 @@ Define the validation, promotion, rollback, and retraining rules for AI models.
 - Calibration review using Brier score and reliability bins.
 - Minimum trade-count sufficiency before promotion.
 - Promotion requires out-of-sample improvement over the active model.
+- Training dataset must be sourced from real historical market and execution data before promotion beyond development.
+
+## Data Source Requirements
+
+- Synthetic datasets are allowed only for pipeline bootstrap and local engineering validation.
+- Demo, pilot, and live promotion decisions must use real historical data with auditable provenance.
+- Required provenance fields:
+  - symbol
+  - timeframe
+  - barCloseTimeUtc
+  - strategyVersion
+  - modelVersion
+  - featureSchemaHash
+
+Minimum dataset standards for candidate model promotion:
+
+- At least 3 years of history for each active symbol.
+- Coverage across trend, range, and high-volatility regimes.
+- Label generation based on documented horizon and +2R/-1R rules.
 
 ## Lifecycle
 1. candidate

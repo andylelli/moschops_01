@@ -22,9 +22,13 @@ Define the primary persisted entities and the lineage required for auditability 
 | training_runs | Training job metadata | Training pipeline | training_run_id, dataset_version |
 | outcome_labels | Supervised labels for learning | Post-trade labeling job | signal_id, label_version |
 | performance_snapshots | Aggregated performance metrics | Reporting pipeline | snapshot_id, strategy_id, model_version |
+| market_bars_raw | Historical OHLCV source bars | MT5 export / broker history | symbol, timeframe, bar_close_time_utc, source_batch_id |
+| training_datasets | Materialized supervised datasets | Training extraction pipeline | dataset_version, feature_schema_hash, source_batch_id |
 
 ## Lineage Rules
 - Every decision record must link to one strategy and one decision time.
 - Every model prediction must link to the model version and feature hash used at inference time.
 - Every trade outcome must link back to the originating signal or risk veto.
 - Retention policy must be defined alongside the implementation schema before live data goes into production.
+- Every training dataset row must trace back to raw market bars and execution outcomes.
+- Feature parity fields (including volatility) must be consistent between runtime payload and training dataset definitions.

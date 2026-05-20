@@ -1,0 +1,10 @@
+pandas==2.2.3
+numpy==2.2.2
+scikit-learn==1.6.1
+xgboost==2.1.4
+lightgbm==4.5.0
+onnx==1.17.0
+skl2onnx==1.18.0
+psycopg[binary]==3.2.4
+SQLAlchemy==2.0.37
+python-dotenv==1.0.1

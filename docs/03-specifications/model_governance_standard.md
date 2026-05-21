@@ -31,6 +31,7 @@ Minimum dataset standards for candidate model promotion:
 - At least 3 years of history for each active symbol.
 - Coverage across trend, range, and high-volatility regimes.
 - Label generation based on documented horizon and +2R/-1R rules.
+- When news-aware controls are part of evaluation scope, include Financial Modeling Prep (FMP) lineage fields and provider tier evidence (`FREE` for `v1.x`, `BASIC` for `v2+`).
 
 ## Lifecycle
 1. candidate

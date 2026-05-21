@@ -19,6 +19,7 @@ Map the major platform requirements to their delivery phase, authoritative desig
 | RTM-08 | Operations dashboard shows risk, health, AI, and live trade status | Phase 9 / v1.3 | [../05-ui/ui_design.md](../05-ui/ui_design.md), [../02-architecture/lld_v1.md](../02-architecture/lld_v1.md) | UI acceptance tests | Not verified |
 | RTM-09 | Demo and micro-live controls require safety gating and incident tracking | Phase 10 / v1.3 | [../01-roadmap/coding_plan.md](../01-roadmap/coding_plan.md), [../02-architecture/lld_v1.md](../02-architecture/lld_v1.md) | Runbook rehearsal | Not verified |
 | RTM-10 | Multi-strategy and managed-cloud expansion preserve v1 safeguards | Phase 11-13 / v2.0-v2.1 | [../02-architecture/lld_v2.md](../02-architecture/lld_v2.md) | Integration and migration tests | Not verified |
+| RTM-11 | News provider is Financial Modeling Prep with version-tier policy (`FREE` for v1.x, `BASIC` for v2+) | Phase v1.1-v2.x | [../02-architecture/lld_v1_1_news.md](../02-architecture/lld_v1_1_news.md), [../02-architecture/lld_v2.md](../02-architecture/lld_v2.md), [../06-plans/news_integration_plan.md](../06-plans/news_integration_plan.md) | Config and health telemetry evidence (`/health`, `/news/providers`) | Not verified |
 
 ## Notes
 - Treat this matrix as the cross-reference layer for planning and review.

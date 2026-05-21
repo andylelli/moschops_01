@@ -28,6 +28,13 @@ Define the first-response playbooks for backend, database, model, and kill-switc
 - Confirm no new entries are allowed.
 - Verify operator acknowledgement before reset.
 
+### News provider stale or down (FMP)
+- Confirm provider freshness state from `/health` and `/news/providers`.
+- Enforce fail-closed behavior for impacted new entries (`NEWS_PROVIDER_STALE`).
+- Preserve protective exits.
+- Verify configured tier for running version (`FREE` in `v1.x`, `BASIC` in `v2+`).
+- Record outage window and remediation actions.
+
 ## Required Fields in Every Incident Log
 - incidentId
 - start time

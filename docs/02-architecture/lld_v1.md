@@ -1,8 +1,15 @@
 # AI Trading System Low-Level Design (LLD) - v1
 
 Version: 1.0
-Last updated: 2026-05-20
+Last updated: 2026-05-21
 Coverage: `v1.0` to `v1.3` from `../01-roadmap/coding_plan.md`
+
+## News Provider Decision (Normative)
+- Selected provider: Financial Modeling Prep (FMP).
+- Pricing reference: https://site.financialmodelingprep.com/developer/docs/pricing
+- `v1.x` tier: `FREE`.
+- `v2+` tier: `BASIC`.
+- LLD integration: `v1.1` scheduled-news execution is defined in `lld_v1_1_news.md` and must persist provider lineage as `FMP`.
 
 ## Contents
 - [1. Scope](#1-scope)

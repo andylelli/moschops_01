@@ -77,6 +77,9 @@ Utility areas:
 - Date/time range filter
 - Theme toggle (light/dark)
 
+News provider visibility requirement:
+- System Health and Risk and Safety views must display configured news provider and tier (`FMP`, `FREE` for `v1.x`, `BASIC` for `v2+`) with freshness state.
+
 ## 5. Visual Design System
 Design direction:
 - Data-dense operations console with calm neutral base and strong semantic accents

@@ -42,6 +42,12 @@ Define the infrastructure topology and promotion gates for the trading platform 
   - Pilot SLOs met for 8 weeks.
   - Final approval from Product and Ops.
 
+## External News Dependency
+- Provider: Financial Modeling Prep (FMP).
+- Pricing reference: https://site.financialmodelingprep.com/developer/docs/pricing
+- Tier by version: `FREE` for `v1.x`, `BASIC` for `v2+`.
+- Environment rule: provider key and tier configuration must be environment-scoped and never shared across env boundaries.
+
 ## Notes
 - All environments must use separate credentials and secrets.
 - Deployment pipelines must enforce promotion gates.

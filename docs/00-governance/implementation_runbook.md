@@ -318,6 +318,25 @@ Exit criteria:
 Objective:
 - [ ] Centralize cross-strategy capital allocation and automate model promotion.
 
+## News Integration Addendum Tracking (v1.1 and v2+)
+Objective:
+- [ ] Implement `lld_v1_1_news.md` scheduled-event controls and carry forward `lld_v2.md` section 11 constraints.
+
+Tasks:
+- [ ] Configure Financial Modeling Prep (FMP) provider integration for `v1.x` with `FREE` tier.
+- [ ] Implement and persist provider freshness telemetry in `/health` and `/news/providers`.
+- [ ] Integrate news policy checks in `/signal`, `/risk-check`, and `/portfolio/evaluate`.
+- [ ] Persist news lineage (`provider`, `providerEventId`, `freshnessState`) in risk and rejection records.
+- [ ] Add v2 migration task to FMP `BASIC` tier and validate incident-oriented flows.
+
+Deliverables:
+- [ ] Provider decision and tier policy reflected in all authoritative docs.
+- [ ] Deterministic scheduled-news controls demonstrated with UTC evidence.
+
+Exit criteria:
+- [ ] v1.x: FMP `FREE` scheduled-event controls pass integration/system tests.
+- [ ] v2+: FMP `BASIC` tier configuration validated with incident-capable data path.
+
 Tasks:
 - [ ] Build allocator enforcing total risk budget across strategies.
 - [ ] Add budget assignment by strategy profile and recent performance.

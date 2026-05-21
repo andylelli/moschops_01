@@ -19,6 +19,7 @@ Define the minimum backtest and validation standards before AI or live rollout.
 - Store bars, signal payload features, execution quality, and outcomes in PostgreSQL.
 - Ensure runtime/training feature parity, including required volatility input.
 - Keep immutable lineage keys so any training row can be traced to original signal and outcome.
+- For news-guard validation slices, use Financial Modeling Prep (FMP) normalized event lineage with recorded provider tier (`FREE` for `v1.x`, `BASIC` for `v2+`).
 
 ## Required Checks
 - No look-ahead bias.

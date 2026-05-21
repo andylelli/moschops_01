@@ -1,7 +1,7 @@
 # AI Trading System Coding Plan
 
 Version: 1.1  
-Last updated: 2026-05-20
+Last updated: 2026-05-21
 
 ## Contents
 - [1. Goal](#1-goal)
@@ -217,6 +217,13 @@ Original build checklist coverage baseline:
 - Infrastructure provisioning, base EA, DB schema, backend endpoints, backtesting, dataset export, model training, ONNX deployment, AI thresholding, demo validation, and micro-live pilot are all represented in the phased/versioned roadmap.
 
 ## 3. Versioned Integration Plan (Full Build)
+
+### News Provider Decision Record
+- Selected provider: Financial Modeling Prep (FMP).
+- Pricing reference: https://site.financialmodelingprep.com/developer/docs/pricing
+- `v1.x` execution tier: `FREE`.
+- `v2+` execution tier: `BASIC`.
+- LLD integration anchor: `../02-architecture/lld_v1_1_news.md` for scheduled-event controls, and `../02-architecture/lld_v2.md` section 11 for live-news extension.
 
 This section defines which platform capabilities ship in each version so the roadmap is not limited to v1.
 

@@ -52,6 +52,44 @@ scripts\install-node-modules.bat
 
 This installs Node dependencies for both `backend` and `dashboard`.
 
+### Option C: Windows Backend Start Scripts
+
+From repository root in Command Prompt or PowerShell:
+
+```bat
+scripts\start-backend-dev.bat
+```
+
+This starts the backend in development mode (`npm run dev`).
+
+```bat
+scripts\start-backend-prod.bat
+```
+
+This builds and starts the backend from `dist` (`npm run build` then `npm run start`).
+
+### Option D: Windows Local Stack Scripts
+
+From repository root in Command Prompt or PowerShell:
+
+```bat
+scripts\start-db.bat
+scripts\init-backend.bat
+scripts\start-dashboard-dev.bat
+scripts\start-dev-stack.bat
+scripts\check-local-health.bat
+scripts\stop-db.bat
+```
+
+What each script does:
+
+- `start-db.bat`: starts PostgreSQL with Docker Compose.
+- `init-backend.bat`: creates `backend/.env` if missing, installs deps, generates Prisma client, and runs migrations.
+- `start-dashboard-dev.bat`: starts the dashboard development server.
+- `start-dev-stack.bat`: starts DB and launches backend/dashboard dev servers in separate terminal windows.
+- `check-local-health.bat`: checks backend health endpoint (`http://localhost:3000/health` by default).
+- `stop-db.bat`: stops PostgreSQL service.
+
 ## Run Locally
 
 ### 1) Start PostgreSQL

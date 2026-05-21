@@ -1,0 +1,37 @@
+@echo off
+setlocal
+
+set "ROOT_DIR=%~dp0.."
+set "SCRIPTS_DIR=%ROOT_DIR%\scripts"
+
+if not exist "%SCRIPTS_DIR%\start-db.bat" (
+  echo [start-dev-stack] ERROR: scripts\start-db.bat not found.
+  exit /b 1
+)
+
+if not exist "%SCRIPTS_DIR%\start-backend-dev.bat" (
+  echo [start-dev-stack] ERROR: scripts\start-backend-dev.bat not found.
+  exit /b 1
+)
+
+if not exist "%SCRIPTS_DIR%\start-dashboard-dev.bat" (
+  echo [start-dev-stack] ERROR: scripts\start-dashboard-dev.bat not found.
+  exit /b 1
+)
+
+if /I "%~1"=="--check" (
+  echo [start-dev-stack] Ready. Required scripts are available.
+  exit /b 0
+)
+
+call "%SCRIPTS_DIR%\start-db.bat"
+if errorlevel 1 exit /b 1
+
+echo [start-dev-stack] Launching backend window...
+start "moschops-backend-dev" cmd /k ""%SCRIPTS_DIR%\start-backend-dev.bat""
+
+echo [start-dev-stack] Launching dashboard window...
+start "moschops-dashboard-dev" cmd /k ""%SCRIPTS_DIR%\start-dashboard-dev.bat""
+
+echo [start-dev-stack] Started postgres, backend, and dashboard.
+exit /b 0

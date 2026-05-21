@@ -19,6 +19,7 @@ Authoritative documents, in order of behavior specificity:
 - If a change affects operator UI behavior, update `../05-ui/ui_design.md` before downstream task lists.
 - Keep the checklist aligned with real document ownership and status.
 - Do not leave a planning doc claiming a capability that no authoritative doc defines.
+- Provider and external dependency decisions (for example news vendor and tier policy) must be synchronized across LLD, roadmap, specs, and operations docs in the same change.
 
 ## Review Rules
 - Every doc change should preserve consistency with the LLDs.

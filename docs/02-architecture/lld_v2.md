@@ -1,7 +1,7 @@
 # AI Trading System Low-Level Design (LLD) - v2
 
 Version: 1.0
-Last updated: 2026-05-20
+Last updated: 2026-05-21
 Coverage: `v2.0` to `v2.1` from `../01-roadmap/coding_plan.md`
 
 ## Contents
@@ -15,6 +15,7 @@ Coverage: `v2.0` to `v2.1` from `../01-roadmap/coding_plan.md`
 - [8. Testing and Acceptance](#8-testing-and-acceptance)
 - [9. Alignment with Coding Plan](#9-alignment-with-coding-plan)
 - [10. UI Evolution (v2.x)]
+- [11. News v2 Execution (Post-v2.0)](#11-news-v2-execution-post-v20)
 
 ### AI Fallback Behavior in Multi-Strategy
 
@@ -194,3 +195,49 @@ v2 UI extensions:
 Theme requirements:
 - Light and dark mode remain mandatory for all new v2 views.
 - Any new component must support both themes with consistent design tokens.
+
+## 11. News v2 Execution (Post-v2.0)
+Provider baseline:
+- Selected provider: Financial Modeling Prep (FMP).
+- Pricing reference: https://site.financialmodelingprep.com/developer/docs/pricing
+- `v2+` runtime tier: `BASIC` (with `v1.x` history on `FREE`).
+
+Execution gate:
+- Live-news reaction work in this section starts only after v2.0 baseline capabilities are complete (strategy registry, shared allocator, and strategy isolation).
+- If any v2.0 baseline capability is incomplete, live-news reaction implementation must not start.
+
+Prerequisites checklist:
+- Strategy registry enforces environment and symbol/timeframe constraints.
+- Shared allocator is active in runtime decisioning and emits attributable rejection reasons.
+- Strategy isolation supervisor is active so one strategy incident path cannot halt all strategies.
+- v1 scheduled-news controls are stable in production-like operation.
+
+Purpose:
+- Extend scheduled-news controls from v1 into live breaking-news reaction suitable for multi-strategy runtime operation.
+
+Scope in v2:
+- Ingest live headline or incident feeds suitable for unscheduled market events.
+- Persist incident lifecycle with explicit states (`OPEN`, `ACKNOWLEDGED`, `CLEARED`, `EXPIRED`).
+- Apply incident-driven risk actions (`PAUSE`, `EXIT_ONLY`) by strategy, symbol scope, and environment.
+- Preserve protective exits while failing closed for new risk.
+- Provide operator visibility and controls for incident acknowledgement and clearing.
+
+Required v2 contracts and lineage:
+- Incident decisions must carry `strategy_id`, `strategy_version`, and environment identifiers.
+- Incident-driven rejections must be attributed to allocator and strategy context.
+- Multi-strategy policy resolution must be deterministic when strategies have different incident modes.
+
+Conflict resolution rule:
+- When strategy incident modes conflict, the stricter action must win for new entries (`PAUSE` > `EXIT_ONLY` > `ALLOW`).
+- Protective exits remain allowed under all incident modes.
+
+Required data extensions:
+- Add incident-oriented tables or extensions that map incident state to strategy and environment scopes.
+- Record incident action history for audit replay and post-incident review.
+
+Acceptance additions for v2 news:
+- Incident open and clear flow works end-to-end across at least two enabled strategies.
+- Incident-driven `PAUSE` blocks new entries while allowing protective exits.
+- Environment-specific incident policy behaves correctly across dev, demo, and pilot scopes.
+- Incident telemetry is visible in UI and health surfaces with clear operator status.
+- Re-running the same incident scenario with unchanged inputs yields the same per-strategy decisions and audit records.

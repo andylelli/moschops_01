@@ -1,10 +1,17 @@
 # API Contract Specification
 
 Version: 1.0  
-Last updated: 2026-05-20
+Last updated: 2026-05-21
 
 ## Purpose
 Define the backend HTTP contract used by the EA, backend services, and dashboard.
+
+News provider baseline:
+- Selected provider: Financial Modeling Prep (FMP).
+- Pricing reference: https://site.financialmodelingprep.com/developer/docs/pricing
+- `v1.x` tier: `FREE`.
+- `v2+` tier: `BASIC`.
+- Backend owns news state and provider integration (EA does not supply provider payloads).
 
 ## Common Rules
 - All endpoints use JSON request and response bodies unless noted otherwise.
@@ -122,6 +129,18 @@ Returns backend dependency status.
 Health telemetry requirements:
 - `telemetry.modelLoader` returns `available` or `degraded`.
 - `telemetry.modelReason` provides degradation reason when applicable.
+- `telemetry.newsProvider` returns `FMP` when news integration is enabled.
+- `telemetry.newsProviderTier` returns `FREE` for `v1.x` and `BASIC` for `v2+`.
+- `telemetry.newsFreshness` returns `FRESH|DEGRADED|STALE|DOWN`.
+
+### GET /news/upcoming
+Returns upcoming normalized calendar events from FMP-backed ingestion.
+
+### GET /news/active
+Returns currently active guard windows derived from normalized FMP events.
+
+### GET /news/providers
+Returns provider status and freshness, including provider name (`FMP`) and active tier.
 
 ## Idempotency
 - decisionKey = strategyId + symbol + timeframe + barCloseTimeUtc

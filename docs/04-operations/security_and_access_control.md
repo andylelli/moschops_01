@@ -15,6 +15,8 @@ Define the minimum security and access expectations for the trading platform.
 - Store secrets outside source control.
 - Rotate credentials by environment.
 - Do not expose secret material in logs or client payloads.
+- Treat Financial Modeling Prep (FMP) API keys as production secrets in all environments.
+- Enforce provider tier policy by version: `FREE` for `v1.x`, `BASIC` for `v2+`.
 
 ## Environment Boundaries
 - Separate dev, demo, pilot, and live environments.

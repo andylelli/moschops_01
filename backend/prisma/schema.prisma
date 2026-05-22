@@ -217,3 +217,59 @@ model PortfolioDecisionItem {
   createdAt           DateTime          @default(now())
   portfolioDecision   PortfolioDecision @relation(fields: [portfolioDecisionId], references: [portfolioDecisionId], onDelete: Cascade)
 }
+
+model NewsEvent {
+  newsEventId      String   @id @default(cuid())
+  provider         String
+  providerEventId  String
+  eventType        String
+  title            String
+  countryCode      String?
+  currencyCode     String?
+  severity         String
+  scheduledAtUtc   DateTime
+  forecastValue    Float?
+  previousValue    Float?
+  actualValue      Float?
+  status           String
+  rawJson          Json
+  normalizedJson   Json
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  guardWindows     NewsGuardWindow[]
+
+  @@unique([provider, providerEventId])
+  @@index([scheduledAtUtc])
+  @@index([currencyCode, scheduledAtUtc])
+}
+
+model NewsProviderStatus {
+  provider              String   @id
+  lastSuccessfulSyncUtc DateTime?
+  lastAttemptedSyncUtc  DateTime
+  freshnessState        String
+  failureReason         String?
+  budgetUsed            Int?
+  budgetLimit           Int?
+  updatedAt             DateTime @updatedAt
+}
+
+model NewsGuardWindow {
+  guardWindowId  String   @id @default(cuid())
+  newsEventId    String
+  symbolScope    String
+  currencyScope  String?
+  policyAction   String
+  startsAtUtc    DateTime
+  endsAtUtc      DateTime
+  severity       String
+  reasonCode     String
+  metadataJson   Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  newsEvent      NewsEvent @relation(fields: [newsEventId], references: [newsEventId], onDelete: Cascade)
+
+  @@unique([newsEventId, symbolScope, policyAction])
+  @@index([symbolScope, startsAtUtc, endsAtUtc])
+  @@index([startsAtUtc, endsAtUtc])
+}

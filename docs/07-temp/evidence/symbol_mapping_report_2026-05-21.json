@@ -1,0 +1,38 @@
+{
+  "generatedAtUtc": "2026-05-21T20:38:34.002Z",
+  "symbolCount": 4,
+  "mappedCount": 4,
+  "missingCount": 0,
+  "missingSymbols": [],
+  "items": [
+    {
+      "symbol": "EURUSD",
+      "currencies": [
+        "EUR",
+        "USD"
+      ]
+    },
+    {
+      "symbol": "GBPUSD",
+      "currencies": [
+        "GBP",
+        "USD"
+      ]
+    },
+    {
+      "symbol": "USDJPY",
+      "currencies": [
+        "USD",
+        "JPY"
+      ]
+    },
+    {
+      "symbol": "XAUUSD",
+      "currencies": [
+        "XAU",
+        "USD"
+      ]
+    }
+  ],
+  "status": "pass"
+}

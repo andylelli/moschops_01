@@ -10,6 +10,9 @@ import { loggingRoutes } from "./routes/logging";
 import { metricsRoutes } from "./routes/metrics";
 import { openTradesRoutes } from "./routes/trades-open";
 import { portfolioRoutes } from "./routes/portfolio";
+import { newsRoutes } from "./routes/news";
+import { startNewsSync } from "./services/news-sync";
+import { ensureActiveModelVersionRecord } from "./services/model-metadata";
 
 export function buildApp(): FastifyInstance {
   // Validate configuration at app startup
@@ -32,6 +35,16 @@ export function buildApp(): FastifyInstance {
   void app.register(metricsRoutes);
   void app.register(openTradesRoutes);
   void app.register(portfolioRoutes);
+  void app.register(newsRoutes);
+
+  app.addHook("onReady", async () => {
+    await ensureActiveModelVersionRecord(app.log);
+  });
+
+  const stopNewsSync = startNewsSync(app.log);
+  app.addHook("onClose", async () => {
+    stopNewsSync();
+  });
 
   return app;
 }

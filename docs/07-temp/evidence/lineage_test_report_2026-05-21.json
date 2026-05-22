@@ -1,0 +1,36 @@
+{
+  "generatedAtUtc": "2026-05-21T20:24:51.054Z",
+  "decisionId": "lineage-1779395090519",
+  "tradeId": "lineage-trade-1779395090519",
+  "signalResponseStatus": 200,
+  "logTradeResponseStatus": 200,
+  "sqlChainRow": {
+    "decisionId": "lineage-1779395090519",
+    "signalId": "6daf8039-8746-4bf7-885a-0ba3d3305c9c",
+    "strategyId": "daily-breakout-5-10",
+    "strategyVersion": "1.0.0",
+    "modelVersion": "logreg-2026-05-20",
+    "tradeId": "lineage-trade-1779395090519",
+    "tradeStatus": "CLOSED",
+    "closeReason": "LINEAGE_PROBE_CLOSE"
+  },
+  "results": [
+    {
+      "name": "signal persisted",
+      "status": "pass",
+      "details": "status=200"
+    },
+    {
+      "name": "trade persisted",
+      "status": "pass",
+      "details": "status=200"
+    },
+    {
+      "name": "lineage sql chain",
+      "status": "pass",
+      "details": "signal->trade chain query returned expected IDs and versions"
+    }
+  ],
+  "passCount": 3,
+  "failCount": 0
+}

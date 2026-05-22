@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "v1",
+  "features": [
+    "trend_strength",
+    "volatility",
+    "spread_atr",
+    "breakout_distance",
+    "momentum"
+  ]
+}

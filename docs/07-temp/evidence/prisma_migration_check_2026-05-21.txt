@@ -1,0 +1,32 @@
+﻿Prisma Migration Check - 2026-05-21
+
+--- npm run prisma:generate ---
+
+> backend@0.1.0 prisma:generate
+> prisma generate Object
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+
+Ô£ö Generated Prisma Client (v5.22.0) to .\node_modules\@prisma\client in 231ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+
+
+--- npm run prisma:deploy ---
+
+> backend@0.1.0 prisma:deploy
+> prisma migrate deploy
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "moschops", schema "public" at "localhost:5432"
+
+3 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+
+Summary: Generate: PASS, Deploy: PASS

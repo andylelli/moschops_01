@@ -1,0 +1,138 @@
+{
+  "generatedAtUtc": "2026-05-21T20:13:17.227Z",
+  "results": [
+    {
+      "source": "backend",
+      "name": "GET /health",
+      "status": 200,
+      "ok": true,
+      "summary": "status:ok"
+    },
+    {
+      "source": "backend",
+      "name": "GET /news/providers",
+      "status": 200,
+      "ok": true,
+      "summary": "items:1"
+    },
+    {
+      "source": "backend",
+      "name": "GET /news/active?limit=5",
+      "status": 200,
+      "ok": true,
+      "summary": "count:0"
+    },
+    {
+      "source": "backend",
+      "name": "GET /news/upcoming?limit=5",
+      "status": 200,
+      "ok": true,
+      "summary": "count:5"
+    },
+    {
+      "source": "backend",
+      "name": "POST /trades/open",
+      "status": 200,
+      "ok": true,
+      "summary": "ok:true"
+    },
+    {
+      "source": "backend",
+      "name": "GET /trades/open",
+      "status": 200,
+      "ok": true,
+      "summary": "count:7"
+    },
+    {
+      "source": "backend",
+      "name": "GET /model-version",
+      "status": 200,
+      "ok": true,
+      "summary": "response"
+    },
+    {
+      "source": "backend",
+      "name": "GET /performance",
+      "status": 200,
+      "ok": true,
+      "summary": "count:0"
+    },
+    {
+      "source": "backend",
+      "name": "POST /log-signal",
+      "status": 200,
+      "ok": true,
+      "summary": "ok:true"
+    },
+    {
+      "source": "backend",
+      "name": "POST /log-rejected-signal",
+      "status": 200,
+      "ok": true,
+      "summary": "ok:true"
+    },
+    {
+      "source": "backend",
+      "name": "POST /log-trade",
+      "status": 200,
+      "ok": true,
+      "summary": "ok:true"
+    },
+    {
+      "source": "backend",
+      "name": "POST /risk-check",
+      "status": 200,
+      "ok": true,
+      "summary": "approved:false"
+    },
+    {
+      "source": "backend",
+      "name": "POST /portfolio/evaluate",
+      "status": 200,
+      "ok": true,
+      "summary": "portfolioDecisionId"
+    },
+    {
+      "source": "backend",
+      "name": "POST /signal",
+      "status": 200,
+      "ok": true,
+      "summary": "response"
+    },
+    {
+      "source": "fmp",
+      "name": "stable current day header",
+      "status": 200,
+      "ok": true,
+      "summary": "count:126"
+    },
+    {
+      "source": "fmp",
+      "name": "stable historical header",
+      "status": 402,
+      "ok": false,
+      "summary": "text:Premium Query Parameter: 'Special Endpoint : This value set for 'to' is not available under your current subscription pl"
+    },
+    {
+      "source": "fmp",
+      "name": "stable historical query fallback",
+      "status": 402,
+      "ok": false,
+      "summary": "text:Premium Query Parameter: 'Special Endpoint : This value set for 'to' is not available under your current subscription pl"
+    },
+    {
+      "source": "fmp",
+      "name": "v3 current day query",
+      "status": 403,
+      "ok": false,
+      "summary": "json:object"
+    },
+    {
+      "source": "fmp",
+      "name": "v3 historical query",
+      "status": 403,
+      "ok": false,
+      "summary": "json:object"
+    }
+  ]
+}

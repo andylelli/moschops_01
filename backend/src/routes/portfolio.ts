@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import { evaluateAccountLevelRisk } from "../services/risk-engine";
 import { prismaClient } from "../services/prisma";
+import { evaluateNewsPolicy } from "../services/news-policy";
 
 const portfolioSchema = z.object({
   accountSnapshot: z.object({
@@ -123,26 +124,36 @@ export async function portfolioRoutes(app: FastifyInstance): Promise<void> {
         },
       });
 
-      if (result.approved) {
+      const newsPolicy = await evaluateNewsPolicy({
+        symbol: plan.symbol,
+        isEntryAction: true,
+        db: tx,
+      });
+
+      const reasonCodes = [...result.vetoReasonCodes, ...newsPolicy.reasonCodes];
+      const blockedByNews = newsPolicy.policyAction === "BLOCK_NEW";
+
+      if (result.approved && !blockedByNews) {
+        const riskMultiplier = newsPolicy.policyAction === "REDUCE" ? 0.5 : 1;
         approvedPlans.push(plan.decisionId);
-        runningOpenRisk += plan.proposedRiskPct;
+        runningOpenRisk += plan.proposedRiskPct * riskMultiplier;
         runningOpenTrades += 1;
         await tx.portfolioDecisionItem.create({
           data: {
             portfolioDecisionId,
             decisionId: plan.decisionId,
             approved: true,
-            reasonCodes: [],
+            reasonCodes,
           },
         });
       } else {
-        rejectedPlans.push({ decisionId: plan.decisionId, reasonCodes: result.vetoReasonCodes });
+        rejectedPlans.push({ decisionId: plan.decisionId, reasonCodes });
         await tx.portfolioDecisionItem.create({
           data: {
             portfolioDecisionId,
             decisionId: plan.decisionId,
             approved: false,
-            reasonCodes: result.vetoReasonCodes,
+            reasonCodes,
           },
         });
       }

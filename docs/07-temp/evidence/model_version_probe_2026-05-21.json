@@ -1,0 +1,10 @@
+{
+  "statusCode": 200,
+  "body": {
+    "strategyId": "daily-breakout-5-10",
+    "strategyVersion": "1.0.0",
+    "modelVersion": "logreg-2026-05-20",
+    "lifecycleState": "ACTIVE",
+    "createdAt": "2026-05-21T20:12:10.033Z"
+  }
+}

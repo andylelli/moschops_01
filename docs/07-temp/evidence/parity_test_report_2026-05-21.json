@@ -1,0 +1,70 @@
+{
+  "generatedAtUtc": "2026-05-21T20:27:52.703Z",
+  "forcedFreshnessState": "DOWN",
+  "signalResponse": {
+    "decisionId": "parity-signal-1779395271780",
+    "signalId": "87abc663-5c47-426c-b851-a6ab9a97e48c",
+    "action": "HOLD",
+    "riskDecision": "VETOED",
+    "reasonCodes": [
+      "NEWS_PROVIDER_STALE",
+      "AI_MODEL_UNAVAILABLE"
+    ],
+    "barCloseTimeUtc": "2026-05-21T20:27:52.103Z",
+    "evaluatedAtUtc": "2026-05-21T20:27:52.148Z",
+    "sizeBucket": "FULL",
+    "newsContext": {
+      "policyAction": "BLOCK_NEW",
+      "provider": "FMP",
+      "freshnessState": "DOWN",
+      "newsEventId": null
+    }
+  },
+  "riskResponse": {
+    "approved": false,
+    "vetoReasonCodes": [
+      "NEWS_PROVIDER_STALE"
+    ],
+    "adjustedSize": 0,
+    "evaluatedAtUtc": "2026-05-21T20:27:52.591Z"
+  },
+  "portfolioResponse": {
+    "portfolioDecisionId": "portfolio-acct-parity-1-1779395272638-7bwqp3",
+    "approvedPlans": [],
+    "rejectedPlans": [
+      {
+        "decisionId": "parity-plan-1779395271780",
+        "reasonCodes": [
+          "NEWS_PROVIDER_STALE"
+        ]
+      }
+    ],
+    "remainingRiskBudget": 0.03,
+    "remainingTradeSlots": 5,
+    "evaluatedAtUtc": "2026-05-21T20:27:52.686Z"
+  },
+  "results": [
+    {
+      "name": "signal blocked by news",
+      "status": "pass",
+      "details": "status=200"
+    },
+    {
+      "name": "risk-check blocked by news",
+      "status": "pass",
+      "details": "status=200"
+    },
+    {
+      "name": "portfolio blocked by news",
+      "status": "pass",
+      "details": "status=200"
+    },
+    {
+      "name": "reason code parity",
+      "status": "pass",
+      "details": "expected NEWS_PROVIDER_STALE across all endpoints"
+    }
+  ],
+  "passCount": 4,
+  "failCount": 0
+}

@@ -1,0 +1,35 @@
+{
+  "generatedAtUtc": "2026-05-21T20:35:48.324Z",
+  "results": [
+    {
+      "route": "/overview",
+      "expected": "Temporarily Disabled",
+      "hasExpectedText": true,
+      "hasErrorText": false,
+      "status": "pass"
+    },
+    {
+      "route": "/trades-signals",
+      "expected": "Open Trades Snapshot",
+      "hasExpectedText": true,
+      "hasErrorText": false,
+      "status": "pass"
+    },
+    {
+      "route": "/risk-safety",
+      "expected": "News Provider Status",
+      "hasExpectedText": true,
+      "hasErrorText": false,
+      "status": "pass"
+    },
+    {
+      "route": "/system-health",
+      "expected": "System Health Snapshot",
+      "hasExpectedText": true,
+      "hasErrorText": false,
+      "status": "pass"
+    }
+  ],
+  "passCount": 4,
+  "failCount": 0
+}

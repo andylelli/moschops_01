@@ -1,0 +1,3 @@
+﻿News Sync Disabled Probe - 2026-05-21
+HEALTH_BODY={"status":"ok","service":"moschops-backend","timestamp":"2026-05-21T20:06:23.798Z","telemetry":{"backend":"up","database":"up","modelLoader":"degraded","modelReason":"model_not_ready","newsProvider":{"provider":"FMP","tier":"FREE","freshnessState":"DOWN","lastAttemptedSyncUtc":"2026-05-21T20:05:22.348Z","lastSuccessfulSyncUtc":null,"failureReason":"NEWS_SYNC_DISABLED","budgetUsed":0,"budgetLimit":250}}}
+PROVIDERS_BODY={"items":[{"provider":"FMP","tier":"FREE","freshnessState":"DOWN","lastAttemptedSyncUtc":null,"lastSuccessfulSyncUtc":null,"failureReason":"NEWS_SYNC_DISABLED","budgetUsed":0,"budgetLimit":250}]}

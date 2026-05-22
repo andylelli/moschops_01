@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { evaluateAccountLevelRisk } from "../services/risk-engine";
 import { prismaClient } from "../services/prisma";
+import { evaluateNewsPolicy } from "../services/news-policy";
 
 const riskCheckSchema = z.object({
   decisionId: z.string().min(1),
@@ -29,18 +30,44 @@ export async function riskRoutes(app: FastifyInstance): Promise<void> {
       return reply.status(400).send({ error: { code: "INVALID_REQUEST", message: parsed.error.message } });
     }
 
-    const result = evaluateAccountLevelRisk(parsed.data);
+    const accountResult = evaluateAccountLevelRisk(parsed.data);
+    const newsPolicy = await evaluateNewsPolicy({
+      symbol: parsed.data.symbol,
+      isEntryAction: true,
+    });
+
+    const reasonCodes = [...accountResult.vetoReasonCodes, ...newsPolicy.reasonCodes];
+    const approved = accountResult.approved && newsPolicy.policyAction !== "BLOCK_NEW";
+
+    const result = {
+      approved,
+      vetoReasonCodes: reasonCodes,
+      adjustedSize: approved
+        ? newsPolicy.policyAction === "REDUCE"
+          ? Math.min(accountResult.adjustedSize, 0.5)
+          : accountResult.adjustedSize
+        : 0,
+      evaluatedAtUtc: accountResult.evaluatedAtUtc,
+    };
 
     try {
-      if (!result.approved) {
+      if (!result.approved || newsPolicy.policyAction === "REDUCE") {
         await prismaClient().riskEvent.create({
           data: {
             decisionId: parsed.data.decisionId,
             strategyId: parsed.data.strategyId,
-            eventType: "RISK_VETO",
+            eventType: result.approved ? "RISK_REDUCE" : "RISK_VETO",
             reasonCode: result.vetoReasonCodes.join(",") || "UNKNOWN",
             severity: "warning",
-            detailsJson: parsed.data,
+            detailsJson: {
+              request: parsed.data,
+              newsContext: {
+                policyAction: newsPolicy.policyAction,
+                provider: newsPolicy.provider,
+                freshnessState: newsPolicy.freshnessState,
+                newsEventId: newsPolicy.newsEventId ?? null,
+              },
+            },
           },
         });
       }

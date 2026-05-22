@@ -1,0 +1,14 @@
+﻿{
+    "items":  [
+                  {
+                      "provider":  "FMP",
+                      "tier":  "FREE",
+                      "freshnessState":  "DOWN",
+                      "lastAttemptedSyncUtc":  null,
+                      "lastSuccessfulSyncUtc":  null,
+                      "failureReason":  "NEWS_SYNC_DISABLED",
+                      "budgetUsed":  0,
+                      "budgetLimit":  250
+                  }
+              ]
+}

@@ -1,0 +1,34 @@
+{
+  "generatedAtUtc": "2026-05-21T20:39:26.369Z",
+  "results": [
+    {
+      "scenario": "full-size",
+      "aiScore": 0.7,
+      "expectedBucket": "FULL",
+      "actualBucket": "FULL",
+      "expectedAction": "BUY",
+      "actualAction": "BUY",
+      "status": "pass"
+    },
+    {
+      "scenario": "half-size",
+      "aiScore": 0.6,
+      "expectedBucket": "HALF",
+      "actualBucket": "HALF",
+      "expectedAction": "BUY",
+      "actualAction": "BUY",
+      "status": "pass"
+    },
+    {
+      "scenario": "skip",
+      "aiScore": 0.5,
+      "expectedBucket": "SKIP",
+      "actualBucket": "SKIP",
+      "expectedAction": "HOLD",
+      "actualAction": "HOLD",
+      "status": "pass"
+    }
+  ],
+  "passCount": 3,
+  "failCount": 0
+}

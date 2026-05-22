@@ -1,0 +1,44 @@
+{
+  "generatedAtUtc": "2026-05-21T20:25:50.473Z",
+  "thresholds": {
+    "degradedMinutes": 15,
+    "staleMinutes": 30
+  },
+  "nowUtc": "2026-05-21T20:25:50.226Z",
+  "results": [
+    {
+      "state": "FRESH",
+      "expected": "FRESH",
+      "healthState": "FRESH",
+      "providerState": "FRESH",
+      "status": "pass",
+      "lastSuccessfulSyncUtc": "2026-05-21T20:24:50.226Z"
+    },
+    {
+      "state": "DEGRADED",
+      "expected": "DEGRADED",
+      "healthState": "DEGRADED",
+      "providerState": "DEGRADED",
+      "status": "pass",
+      "lastSuccessfulSyncUtc": "2026-05-21T20:09:50.226Z"
+    },
+    {
+      "state": "STALE",
+      "expected": "STALE",
+      "healthState": "STALE",
+      "providerState": "STALE",
+      "status": "pass",
+      "lastSuccessfulSyncUtc": "2026-05-21T19:54:50.226Z"
+    },
+    {
+      "state": "DOWN",
+      "expected": "DOWN",
+      "healthState": "DOWN",
+      "providerState": "DOWN",
+      "status": "pass",
+      "lastSuccessfulSyncUtc": null
+    }
+  ],
+  "passCount": 4,
+  "failCount": 0
+}

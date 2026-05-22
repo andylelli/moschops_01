@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import MetricCard from '../components/MetricCard.vue'
-import DataPanel from '../components/DataPanel.vue'
 import { apiGet } from '../api'
 
 type HealthResponse = { status: string; timestamp: string }
@@ -27,14 +25,19 @@ onMounted(fetchHealth)
 
 <template>
   <div class="space-y-4">
-    <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-      <MetricCard label="Equity" value="N/A" subtitle="Awaiting account feed" />
-      <MetricCard label="Drawdown" value="N/A" subtitle="Awaiting account feed" />
-      <MetricCard label="Daily PnL" value="N/A" subtitle="Awaiting account feed" />
-      <MetricCard label="AI Score Drift" value="N/A" subtitle="Awaiting model feed" />
-    </div>
-    <DataPanel title="System Health" :loading="loading" :error="error" :updated-at="health?.timestamp">
-      <p class="text-sm">Backend status: {{ health?.status ?? 'N/A' }}</p>
-    </DataPanel>
+    <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
+      <h2 class="text-sm font-semibold">Temporarily Disabled</h2>
+      <p class="mt-2 text-sm text-[var(--text-secondary)]">Account performance and AI drift widgets are disabled until their data feeds are live.</p>
+    </section>
+    <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="text-sm font-semibold">System Health</h2>
+        <p v-if="health?.timestamp" class="text-xs text-[var(--text-secondary)]">Updated {{ health.timestamp }}</p>
+      </div>
+
+      <p v-if="loading" class="text-sm text-[var(--text-secondary)]">Loading...</p>
+      <p v-else-if="error" class="text-sm text-[var(--accent-danger)]">{{ error }}</p>
+      <p v-else class="text-sm">Backend status: {{ health?.status ?? 'N/A' }}</p>
+    </section>
   </div>
 </template>

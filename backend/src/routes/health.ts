@@ -1,6 +1,9 @@
 import type { FastifyInstance } from "fastify";
+import type { NewsProviderStatus } from "@prisma/client";
 import { prismaClient } from "../services/prisma";
 import { getModelLoaderStatus } from "../services/model-inference";
+import { NEWS_PROVIDER } from "../services/news-domain";
+import { env } from "../utils/env";
 
 export async function healthRoutes(app: FastifyInstance): Promise<void> {
   app.get("/health", async () => {
@@ -12,6 +15,15 @@ export async function healthRoutes(app: FastifyInstance): Promise<void> {
     }
 
     const modelStatus = getModelLoaderStatus();
+    let providerStatus: NewsProviderStatus | null = null;
+
+    try {
+      providerStatus = await prismaClient().newsProviderStatus.findUnique({
+        where: { provider: NEWS_PROVIDER },
+      });
+    } catch {
+      providerStatus = null;
+    }
 
     return {
       status: "ok",
@@ -22,6 +34,16 @@ export async function healthRoutes(app: FastifyInstance): Promise<void> {
         database: db,
         modelLoader: modelStatus.state,
         modelReason: modelStatus.reason,
+        newsProvider: {
+          provider: NEWS_PROVIDER,
+          tier: env.NEWS_PROVIDER_TIER,
+          freshnessState: providerStatus?.freshnessState ?? "DOWN",
+          lastAttemptedSyncUtc: providerStatus?.lastAttemptedSyncUtc?.toISOString() ?? null,
+          lastSuccessfulSyncUtc: providerStatus?.lastSuccessfulSyncUtc?.toISOString() ?? null,
+          failureReason: providerStatus?.failureReason ?? (env.NEWS_SYNC_ENABLED ? "NEWS_PROVIDER_UNINITIALIZED" : "NEWS_SYNC_DISABLED"),
+          budgetUsed: providerStatus?.budgetUsed ?? 0,
+          budgetLimit: providerStatus?.budgetLimit ?? null,
+        },
       },
     };
   });

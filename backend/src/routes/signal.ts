@@ -7,6 +7,9 @@ import { inferScore } from "../services/model-inference";
 import { decisionKey, newSignalId } from "../utils/ids";
 import { RISK_LIMITS } from "../config/riskLimits";
 import { Prisma } from "@prisma/client";
+import { evaluateNewsPolicy } from "../services/news-policy";
+import { isEntryAction } from "../services/news-domain";
+import { buildInferenceFeatures } from "../services/feature-schema";
 
 const signalSchema = z.object({
   decisionId: z.string().min(1),
@@ -57,16 +60,12 @@ export async function signalRoutes(app: FastifyInstance): Promise<void> {
 
     const risk = evaluateSignalLevelRisk(input);
     const strategyAction = evaluateDailyBreakout(input);
+    const newsPolicy = await evaluateNewsPolicy({
+      symbol: input.symbol,
+      isEntryAction: isEntryAction(strategyAction),
+    });
 
-    // Compute inference features matching training data schema
-    // Features: [trend_strength, volatility, spread_atr, breakout_distance, momentum]
-    const inferenceFeatures = [
-      input.marketSnapshot.close1 - input.marketSnapshot.sma200_1,  // trend_strength
-      input.marketSnapshot.volatility,                               // volatility
-      (input.marketSnapshot.spreadPrice ?? 0) / Math.max(input.marketSnapshot.atr20_1, 0.000001),  // spread_atr
-      input.marketSnapshot.close1 - input.marketSnapshot.highestHigh55,  // breakout_distance
-      input.marketSnapshot.close1 - input.marketSnapshot.sma100_1,  // momentum
-    ];
+    const inferenceFeatures = buildInferenceFeatures(input.marketSnapshot);
 
     const inference = typeof input.aiScore === "number" ? { score: input.aiScore, status: "APPLIED" as const } : await inferScore(inferenceFeatures);
     const inferredScore = inference.score ?? undefined;
@@ -100,16 +99,29 @@ export async function signalRoutes(app: FastifyInstance): Promise<void> {
       }
     }
 
+    const riskApproved = risk.approved && newsPolicy.policyAction !== "BLOCK_NEW";
+
     const response = {
       decisionId: input.decisionId,
       signalId,
-      action: risk.approved && sizeBucket !== "SKIP" ? strategyAction : "HOLD",
-      riskDecision: risk.approved ? "APPROVED" : "VETOED",
-      reasonCodes: [...risk.reasonCodes, ...aiReasons],
+      action:
+        riskApproved && sizeBucket !== "SKIP"
+          ? newsPolicy.policyAction === "REDUCE" && isEntryAction(strategyAction)
+            ? "REDUCE"
+            : strategyAction
+          : "HOLD",
+      riskDecision: riskApproved ? "APPROVED" : "VETOED",
+      reasonCodes: [...risk.reasonCodes, ...newsPolicy.reasonCodes, ...aiReasons],
       barCloseTimeUtc: input.barCloseTimeUtc,
       evaluatedAtUtc,
       aiScore: inferredScore,
       sizeBucket,
+      newsContext: {
+        policyAction: newsPolicy.policyAction,
+        provider: newsPolicy.provider,
+        freshnessState: newsPolicy.freshnessState,
+        newsEventId: newsPolicy.newsEventId ?? null,
+      },
     };
 
     try {
@@ -130,6 +142,24 @@ export async function signalRoutes(app: FastifyInstance): Promise<void> {
           responseJson: response,
         },
       });
+
+      if (response.riskDecision === "VETOED") {
+        await prismaClient().rejectedSignal.create({
+          data: {
+            decisionId: input.decisionId,
+            signalId,
+            strategyId: input.strategyId,
+            strategyVersion: input.strategyVersion,
+            symbol: input.symbol,
+            timeframe: input.timeframe,
+            reasonCode: response.reasonCodes.join(",") || "RISK_VETO",
+            detailsJson: {
+              reasonCodes: response.reasonCodes,
+              newsContext: response.newsContext,
+            },
+          },
+        });
+      }
     } catch (error) {
       const isDuplicate =
         error instanceof Prisma.PrismaClientKnownRequestError &&

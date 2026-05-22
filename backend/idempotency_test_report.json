@@ -1,0 +1,27 @@
+{
+  "generatedAtUtc": "2026-05-21T20:20:23.595Z",
+  "results": [
+    {
+      "name": "signal status check",
+      "status": "pass",
+      "details": "first=200, replay=200"
+    },
+    {
+      "name": "signal response replay",
+      "status": "pass",
+      "details": "responses are replay-stable"
+    },
+    {
+      "name": "portfolio status check",
+      "status": "pass",
+      "details": "first=200, replay=200"
+    },
+    {
+      "name": "portfolio response replay",
+      "status": "pass",
+      "details": "responses are replay-stable"
+    }
+  ],
+  "passCount": 4,
+  "failCount": 0
+}

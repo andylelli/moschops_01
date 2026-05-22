@@ -1,11 +1,12 @@
 # AI Trading System Low-Level Design (LLD) - v1
 
-Version: 1.0
+Version: 1.1
 Last updated: 2026-05-21
 Coverage: `v1.0` to `v1.3` from `../01-roadmap/coding_plan.md`
 
 ## News Provider Decision (Normative)
 - Selected provider: Financial Modeling Prep (FMP).
+- API documentation reference: https://site.financialmodelingprep.com/developer/docs/stable/economics-calendar
 - Pricing reference: https://site.financialmodelingprep.com/developer/docs/pricing
 - `v1.x` tier: `FREE`.
 - `v2+` tier: `BASIC`.
@@ -108,6 +109,11 @@ Mandatory endpoints:
 - `POST /trades/open` (from EA, open trade snapshot)
 - `GET /trades/open` (for dashboard, current open trades)
 
+News endpoints required when v1.1 scheduled-news is enabled:
+- `GET /news/upcoming`
+- `GET /news/active`
+- `GET /news/providers`
+
 Idempotency and traceability:
 - `decisionKey = strategyId + symbol + timeframe + barCloseTimeUtc`
 - `decisionId` immutable client UUID for request correlation
@@ -124,6 +130,22 @@ Core controls:
 - Daily/weekly loss limits + drawdown/system pause states
 - Correlation and directional exposure controls
 - Optional high-impact news block/reduce policy
+
+News API feature profile for current v1 strategy (daily breakout):
+- For v1.1, scheduled economic-calendar features are the only news input allowed to alter trade decisions.
+- Strategy-suitable provider path is FMP economic calendar ingestion and normalized guard-window enforcement.
+- Policy integration must be deterministic across `/signal`, `/risk-check`, and `/portfolio/evaluate`.
+- Headline and press-release feeds are not decision-authoritative for v1 strategy and may be used only for operator context until v2 incident workflows are implemented.
+- Economics-indicator data may be consumed as optional operator telemetry in v1.x but must not modify trade decisions unless explicitly approved in a later LLD revision.
+- Provider freshness failure must fail closed for new entries on impacted symbols while preserving protective exits.
+
+Implementation profile required for v1.x execution:
+- Poll scheduled calendar data with UTC-only normalization and idempotent deduplication.
+- Enforce budget-aware polling under `FREE` tier limits to avoid silent freshness drift.
+- Maintain explicit daily call-budget policy and reserved retry capacity under `FREE` tier constraints.
+- Persist provider freshness and failure diagnostics for audit and health telemetry.
+- Require full symbol-to-currency mapping coverage for all enabled instruments before activating scheduled-news policy.
+- Keep EA provider-agnostic: news ingestion remains backend-owned.
 
 Sizing model:
 - Uses symbol metadata (`tickSize`, `tickValueAccountCcy`, `contractSize`)
@@ -192,6 +214,11 @@ Minimum gates:
 - Integration: API flow, DB persistence, idempotency by `decisionKey`
 - System: EA-backend roundtrip, kill-switch behavior, degraded mode behavior
 - Validation: multi-symbol, multi-regime, realistic costs, gap stress tests
+
+Additional mandatory gates when v1.1 scheduled-news is enabled:
+- Unit: FMP field normalization, severity mapping, and deterministic dedup key behavior.
+- Integration: deterministic parity across `/signal`, `/risk-check`, and `/portfolio/evaluate` for identical active windows.
+- System: stale-provider simulation blocks new entries while protective exits remain allowed.
 
 Quality notes:
 - This v1 LLD is aligned to `../01-roadmap/coding_plan.md` phases 0 through 10.

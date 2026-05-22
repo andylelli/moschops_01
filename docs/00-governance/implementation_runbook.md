@@ -149,7 +149,7 @@ Deliverables:
 
 Exit criteria:
 - [ ] Accepted, rejected, and errored decision paths are persisted.
-- [ ] Traceability signal -> trade -> outcome is queryable.
+- [x] Traceability signal -> trade -> outcome is queryable.
 
 ## Phase 4 - Risk Engine Hardening (Target v1.0)
 Objective:
@@ -236,7 +236,7 @@ Tasks:
 
 Deliverables:
 - [x] AI-enabled /signal responses.
-- [ ] Model version endpoint wired to active artifacts.
+- [x] Model version endpoint wired to active artifacts.
 
 Exit criteria:
 - [ ] Inference latency acceptable for D1 strategy.

@@ -1,6 +1,6 @@
 # AI Trading System Low-Level Design (LLD) - v1.1 News Addendum
 
-Version: 1.0
+Version: 1.1
 Last updated: 2026-05-21
 Coverage: Scheduled economic-calendar news controls for v1 execution
 Parent design: docs/02-architecture/lld_v1.md
@@ -8,9 +8,12 @@ Related plan: docs/06-plans/news_integration_plan.md
 
 ## Provider Baseline (Normative)
 - Selected news provider: Financial Modeling Prep (FMP).
+- API documentation reference: https://site.financialmodelingprep.com/developer/docs/stable/economics-calendar
 - Pricing reference: https://site.financialmodelingprep.com/developer/docs/pricing
 - `v1.x` execution tier: `FREE`.
 - `v2+` execution tier: `BASIC`.
+- `FREE` tier implementation budget baseline: 250 calls/day.
+- Provider cadence assumption for scheduling: economic calendar refresh around 10 minutes; headline feeds are not v1.1 decision inputs.
 - LLD integration rule: scheduled-event ingestion in this document must use the FMP calendar/news API integration path and emit provider lineage as `FMP`.
 
 ## Contents
@@ -38,12 +41,17 @@ In scope for this addendum:
 - News-aware veto or size-reduction decisions for affected symbols.
 - Persistence of news-driven risk outcomes for auditability.
 - Dashboard visibility of upcoming and active scheduled event windows.
+- Strategy-suitable FMP API implementation profile for the current daily-breakout execution path.
 
 Out of scope for this addendum:
 - Live breaking-news reaction from headline streams.
 - Incident lifecycle automation (OPEN, ACKNOWLEDGED, CLEARED, EXPIRED).
 - NLP classification of free-text headlines.
 - Multi-strategy differentiated news policies.
+
+Strategy suitability rule for v1.1:
+- v1.1 decisioning must use scheduled economic-calendar data only.
+- FMP general-news, stock-news, and press-release endpoints may be collected for operator visibility only and must not change v1.1 trade decisions.
 
 ## 3. Entry and Exit Criteria
 Entry criteria:
@@ -77,6 +85,17 @@ Execution flow for v1 scheduled news:
 4. `/risk-check` and `/portfolio/evaluate` call the same policy evaluation to avoid cross-endpoint drift.
 5. Responses include existing reason code fields augmented with scheduled-news reason codes.
 6. Risk and rejection persistence records include scheduled-news context.
+
+FMP API implementation profile (strategy-suitable for v1 daily-breakout):
+- Primary provider endpoint: `https://financialmodelingprep.com/stable/economic-calendar`.
+- Required provider parameters: `from` and `to`; requests must respect max 90-day date range.
+- Provider auth: prefer `apikey` in request header; query parameter is allowed fallback.
+- Ingestion window policy: use a rolling UTC window to capture near-term events plus recent revisions (minimum requirement: include upcoming horizon and short lookback).
+- Sync cadence policy on `FREE`: default 10-minute polling aligned to provider cycle-time, governed by daily call budget limits and retry caps.
+- Budget baseline for default cadence: 10-minute polling consumes about 144 calls/day, leaving reserve for retries, startup sync, and health checks.
+- Budget guard policy: preserve reserve budget for retries and operational checks; if reserve is exhausted, mark provider freshness degraded and enforce stale fallback behavior.
+- Determinism policy: provider payload normalization must run server-side only; EA must not call provider APIs directly.
+- Deduplication policy: event upsert key must be deterministic using provider event id when available, otherwise stable composite fields (`date`, `event`, `country`, `currency`).
 
 ## 5. Data Model Additions
 Add these tables for v1 scheduled news:
@@ -126,6 +145,18 @@ Minimum fields:
 - `metadata_json`
 - `created_at`
 
+Required provider-to-model normalization (FMP to internal schema):
+- `date` -> `scheduled_at_utc`.
+- `event` -> `title` and `event_type`.
+- `country` -> `country_code`.
+- `currency` -> `currency_code`.
+- `impact` -> `severity` (`Low` -> `LOW`, `Medium` -> `MEDIUM`, `High` -> `HIGH`, unknown/highest provider class -> `CRITICAL` by policy mapping).
+- `estimate` -> `forecast_value`.
+- `previous` -> `previous_value`.
+- `actual` -> `actual_value`.
+- `unit` -> `normalized_json.unit` when supplied by provider.
+- `provider_event_id` must be deterministic; when provider ID is missing, generate from stable source fields and normalize as idempotent key.
+
 Required lineage additions to existing records:
 - `RiskEvent.detailsJson` includes `newsEventId`, `policyAction`, `provider`, `freshnessState` where applicable.
 - `RejectedSignal.detailsJson` includes scheduled-news veto context where applicable.
@@ -138,6 +169,11 @@ Required additions:
 - `GET /news/upcoming`
 - `GET /news/active`
 - `GET /news/providers`
+
+Provider integration requirements:
+- Backend must call FMP directly and persist normalized results; client-facing API routes must not proxy raw provider responses as decision truth.
+- `/news/upcoming` and `/news/active` must expose normalized scheduled-event data relevant to configured symbols and currency mappings.
+- `/news/providers` must expose provider freshness, last successful sync, and failure reason summary.
 
 Required behavior changes:
 - `/signal` integrates scheduled-news policy check.
@@ -163,6 +199,7 @@ Initial baseline matrix:
 Symbol mapping requirement:
 - Policy must resolve impact by symbol currency exposure.
 - Mapping must be explicit and versioned.
+- All enabled symbols in runtime configuration must have explicit currency mapping before policy activation.
 
 Required reason codes:
 - `NEWS_BLOCK_HIGH_IMPACT`
@@ -171,6 +208,10 @@ Required reason codes:
 
 Required stale-provider fallback:
 - If provider freshness is `STALE` or `DOWN`, new entries for impacted symbols must be blocked conservatively and return `NEWS_PROVIDER_STALE`.
+
+Strategy-suitable policy boundary for v1.1:
+- Scheduled calendar windows are authoritative for entry-block and size-reduction decisions.
+- Headline-derived sentiment or article text must not be used to override scheduled-news policy in v1.1.
 
 Safety requirement:
 - Blocking policy applies to new entries only.
@@ -238,6 +279,13 @@ Environment configuration:
 - freshness thresholds
 - symbol impact map version
 - severity window matrix
+
+Required default implementation controls for current strategy profile:
+- Default sync interval: 10 minutes, with budget-aware retry limits.
+- Daily API call budget guard for `FREE` tier, including reserved retry allowance.
+- Reserve budget floor: keep at least 25% of daily call capacity unallocated for retries and recovery operations.
+- UTC-only ingestion and storage path for all provider timestamps.
+- Provider-field mapping versioning so policy behavior is reproducible across releases.
 
 Runbook requirements:
 - provider degraded handling

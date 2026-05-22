@@ -1,0 +1,21 @@
+{
+  "generatedAtUtc": "2026-05-21T20:38:37.267Z",
+  "schemaVersion": "v1",
+  "runtimeFeatures": [
+    "trend_strength",
+    "volatility",
+    "spread_atr",
+    "breakout_distance",
+    "momentum"
+  ],
+  "contractFeatures": [
+    "trend_strength",
+    "volatility",
+    "spread_atr",
+    "breakout_distance",
+    "momentum"
+  ],
+  "runtimeHash": "67da80f5e65fc18e19c35b6c971c7818f030141b50cd15c8e0b2c6196f4cb0b8",
+  "contractHash": "67da80f5e65fc18e19c35b6c971c7818f030141b50cd15c8e0b2c6196f4cb0b8",
+  "status": "pass"
+}

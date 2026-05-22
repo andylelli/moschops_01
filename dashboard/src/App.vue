@@ -36,9 +36,7 @@ watch(isMobileMenuOpen, (open) => {
 
 const navItems = [
   { to: '/overview', label: 'Overview' },
-  { to: '/portfolio', label: 'Portfolio' },
   { to: '/trades-signals', label: 'Trades and Signals' },
-  { to: '/ai-models', label: 'AI and Models' },
   { to: '/risk-safety', label: 'Risk and Safety' },
   { to: '/system-health', label: 'System Health' },
 ]
@@ -96,13 +94,13 @@ const navItems = [
         <span class="rounded border border-[var(--accent-danger)] bg-[color:color-mix(in_srgb,var(--accent-danger),transparent_88%)] px-2 py-1 text-xs">
           Kill Switch: Normal
         </span>
-        <select v-model="ui.environment" class="rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-sm">
+        <select v-model="ui.environment" class="w-20 rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-sm">
           <option value="dev">dev</option>
           <option value="demo">demo</option>
           <option value="pilot">pilot</option>
           <option value="live">live</option>
         </select>
-        <button class="rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-1 text-sm" @click="ui.toggleTheme()">
+        <button class="w-[7.5rem] rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-1 text-center text-sm" @click="ui.toggleTheme()">
           Theme: {{ ui.theme }}
         </button>
       </div>

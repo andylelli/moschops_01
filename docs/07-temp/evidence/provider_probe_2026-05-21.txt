@@ -1,0 +1,9 @@
+﻿
+> backend@0.1.0 verify:provider
+> tsx src/tools/provider-probe.ts
+
+RESULT:{"source":"fmp","name":"stable current day header","status":200,"ok":true,"itemCount":126,"summary":"count:126"}
+RESULT:{"source":"fmp","name":"stable historical header","status":402,"ok":false,"itemCount":null,"summary":"text:Premium Query Parameter: 'Special Endpoint : This value set for 'to' is not available under your current subscription pl"}
+RESULT:{"source":"fmp","name":"stable historical query fallback","status":402,"ok":false,"itemCount":null,"summary":"text:Premium Query Parameter: 'Special Endpoint : This value set for 'to' is not available under your current subscription pl"}
+RESULT:{"source":"fmp","name":"v3 current day query","status":403,"ok":false,"itemCount":null,"summary":"json:object"}
+RESULT:{"source":"fmp","name":"v3 historical query","status":403,"ok":false,"itemCount":null,"summary":"json:object"}

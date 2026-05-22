@@ -9,6 +9,23 @@ describe("backend app", () => {
     const body = response.json();
     expect(body.status).toBe("ok");
     expect(body.telemetry).toBeDefined();
+    expect(body.telemetry.newsProvider).toBe("FMP");
+    expect(body.telemetry.newsProviderTier).toBe("FREE");
+    expect(["FRESH", "DEGRADED", "STALE", "DOWN"]).toContain(body.telemetry.newsFreshness);
+    await app.close();
+  });
+
+  it("returns provider status for news integrations", async () => {
+    const app = buildApp();
+    const response = await app.inject({ method: "GET", url: "/news/providers" });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body.count).toBe(1);
+    expect(Array.isArray(body.items)).toBe(true);
+    expect(body.items[0].provider).toBe("FMP");
+    expect(body.items[0].tier).toBe("FREE");
+
     await app.close();
   });
 

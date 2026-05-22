@@ -10,6 +10,7 @@ import { loggingRoutes } from "./routes/logging";
 import { metricsRoutes } from "./routes/metrics";
 import { openTradesRoutes } from "./routes/trades-open";
 import { portfolioRoutes } from "./routes/portfolio";
+import { newsRoutes } from "./routes/news";
 
 export function buildApp(): FastifyInstance {
   // Validate configuration at app startup
@@ -32,6 +33,7 @@ export function buildApp(): FastifyInstance {
   void app.register(metricsRoutes);
   void app.register(openTradesRoutes);
   void app.register(portfolioRoutes);
+  void app.register(newsRoutes);
 
   return app;
 }

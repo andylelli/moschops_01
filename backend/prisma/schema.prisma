@@ -15,6 +15,19 @@ enum DecisionAction {
   REDUCE
 }
 
+enum NewsFreshnessState {
+  FRESH
+  DEGRADED
+  STALE
+  DOWN
+}
+
+enum NewsPolicyAction {
+  BLOCK_NEW
+  REDUCE
+  ALLOW
+}
+
 model StrategyConfig {
   id              String   @id @default(cuid())
   strategyId      String
@@ -216,4 +229,59 @@ model PortfolioDecisionItem {
   reasonCodes         String[]
   createdAt           DateTime          @default(now())
   portfolioDecision   PortfolioDecision @relation(fields: [portfolioDecisionId], references: [portfolioDecisionId], onDelete: Cascade)
+}
+
+model NewsEvent {
+  newsEventId     String            @id @default(cuid())
+  provider        String
+  providerEventId String
+  eventType       String
+  title           String
+  countryCode     String?
+  currencyCode    String?
+  severity        String
+  scheduledAtUtc  DateTime
+  forecastValue   String?
+  previousValue   String?
+  actualValue     String?
+  status          String
+  rawJson         Json
+  normalizedJson  Json
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  guardWindows    NewsGuardWindow[]
+
+  @@unique([provider, providerEventId])
+  @@index([scheduledAtUtc])
+  @@map("news_events")
+}
+
+model NewsProviderStatus {
+  provider              String             @id
+  lastSuccessfulSyncUtc DateTime?
+  lastAttemptedSyncUtc  DateTime?
+  freshnessState        NewsFreshnessState @default(DOWN)
+  failureReason         String?
+  updatedAt             DateTime           @updatedAt
+
+  @@map("news_provider_status")
+}
+
+model NewsGuardWindow {
+  guardWindowId  String           @id @default(cuid())
+  newsEventId    String
+  symbolScope    String?
+  currencyScope  String?
+  policyAction   NewsPolicyAction
+  startsAtUtc    DateTime
+  endsAtUtc      DateTime
+  severity       String
+  reasonCode     String
+  metadataJson   Json?
+  createdAt      DateTime         @default(now())
+  newsEvent      NewsEvent        @relation(fields: [newsEventId], references: [newsEventId], onDelete: Cascade)
+
+  @@index([startsAtUtc])
+  @@index([endsAtUtc])
+  @@map("news_guard_windows")
 }

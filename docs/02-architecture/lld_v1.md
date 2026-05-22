@@ -99,6 +99,7 @@ Execution guards:
 Mandatory endpoints:
 - `POST /signal`
 - `POST /risk-check`
+- `POST /portfolio/evaluate`
 - `POST /log-signal`
 - `POST /log-rejected-signal`
 - `POST /log-trade`

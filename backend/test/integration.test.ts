@@ -116,6 +116,27 @@ describe("Phase 3 - Persistence & Audit Logging Integration Tests", () => {
     const body = response.json();
     expect(body.status).toBe("ok");
     expect(body.telemetry.backend).toBe("up");
+    expect(body.telemetry.newsProvider).toBe("FMP");
+    expect(body.telemetry.newsProviderTier).toBe("FREE");
+    expect(["FRESH", "DEGRADED", "STALE", "DOWN"]).toContain(body.telemetry.newsFreshness);
+  });
+
+  test("news endpoints return normalized contract shells", async () => {
+    const providers = await app.inject({ method: "GET", url: "/news/providers" });
+    expect(providers.statusCode).toBe(200);
+    const providersBody = providers.json();
+    expect(providersBody.items[0].provider).toBe("FMP");
+    expect(providersBody.items[0].tier).toBe("FREE");
+
+    const upcoming = await app.inject({ method: "GET", url: "/news/upcoming" });
+    expect(upcoming.statusCode).toBe(200);
+    const upcomingBody = upcoming.json();
+    expect(Array.isArray(upcomingBody.items)).toBe(true);
+
+    const active = await app.inject({ method: "GET", url: "/news/active" });
+    expect(active.statusCode).toBe(200);
+    const activeBody = active.json();
+    expect(Array.isArray(activeBody.items)).toBe(true);
   });
 
   test("risk-check endpoint validates decisions", async () => {

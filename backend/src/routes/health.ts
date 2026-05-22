@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { prismaClient } from "../services/prisma";
 import { getModelLoaderStatus } from "../services/model-inference";
+import { getNewsProviderSnapshot } from "../services/news-state";
 
 export async function healthRoutes(app: FastifyInstance): Promise<void> {
   app.get("/health", async () => {
@@ -12,6 +13,7 @@ export async function healthRoutes(app: FastifyInstance): Promise<void> {
     }
 
     const modelStatus = getModelLoaderStatus();
+    const newsStatus = await getNewsProviderSnapshot();
 
     return {
       status: "ok",
@@ -22,6 +24,9 @@ export async function healthRoutes(app: FastifyInstance): Promise<void> {
         database: db,
         modelLoader: modelStatus.state,
         modelReason: modelStatus.reason,
+        newsProvider: newsStatus.provider,
+        newsProviderTier: newsStatus.tier,
+        newsFreshness: newsStatus.freshnessState,
       },
     };
   });

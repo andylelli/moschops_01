@@ -1,7 +1,7 @@
 # Backtest and Validation Methodology
 
 Version: 1.0  
-Last updated: 2026-05-20
+Last updated: 2026-05-21
 
 ## Purpose
 Define the minimum backtest and validation standards before AI or live rollout.

@@ -1,7 +1,7 @@
 # Full Implementation Runbook and Progress Tracker
 
 Version: 1.0
-Last updated: 2026-05-20
+Last updated: 2026-05-22
 Owner: Tech Lead
 Status: Active
 
@@ -22,23 +22,36 @@ Primary references:
 - Do not mark phase exit criteria complete unless all deliverables are complete.
 - Update this file in the same change as implementation work.
 
+## Remediation Tracker (2026-05-22)
+- [x] Workstream 1 (P0): Governance truth alignment updated in this runbook and in `documentation_checklist.md`.
+- [ ] Workstream 2 (P0): News contract implementation complete end-to-end (routes + schema + tests + integration checks).
+- [ ] Workstream 3 (P0): Signal lineage completeness.
+- [ ] Workstream 4 (P0): Risk engine coverage completion.
+- [ ] Workstream 5 (P1): Strategy/plugin contract hardening.
+- [ ] Workstream 6 (P1): Dashboard contract completion.
+- [ ] Workstream 7 (P1): Contract and document harmonization.
+- [ ] Workstream 8 (P1): Verification and CI evidence hardening.
+
 ## Global Phase Dashboard
 | Phase | Version target | Status | Owner | Start date | End date | Blockers |
 |---|---|---|---|---|---|---|
-| 0 Project Bootstrap | v1.0 | ✅ Complete |  |  |  |  |
-| 1 Base MQL5 EA | v1.0 | ✅ Complete |  |  |  | Position sizing and safety complete; execution scaffold ready |
-| 2 Backend API and Strategy Contract | v1.0 | ✅ Complete |  |  |  | All core routes tested and validated |
-| 3 Database and Audit Logging | v1.0 | ✅ Complete |  |  |  | Schema and migration applied; persistence framework ready |
-| 4 Risk Engine Hardening | v1.0 | ✅ Complete |  |  |  | Core portfolio controls implemented; veto logic working |
-| 5 Baseline Backtesting and Validation | v1.0 | ✅ Complete |  |  |  | Report generated; no look-ahead bias detected |
-| 6 AI Pipeline and Walk-Forward Training | v1.1 | ✅ Complete |  |  |  | Models trained and validated; calibration checks pass |
-| 7 ONNX Inference Integration | v1.1 | ✅ Complete |  |  |  | Model exported and wired into /signal endpoint |
-| 8 Multi-Symbol Portfolio Runtime | v1.2 | ✅ Complete |  |  |  | POST /portfolio/evaluate endpoint implemented and tested |
-| 9 Monitoring and Dashboard | v1.3 | ✅ Complete |  |  |  | UI shell built; API wiring and data binding pending v1.1+ |
+| 0 Project Bootstrap | v1.0 | In progress |  |  |  | Formatting standards and branching workflow are not yet defined in this runbook |
+| 1 Base MQL5 EA | v1.0 | In progress |  |  |  | Several execution/safety tasks and exit criteria remain unchecked |
+| 2 Backend API and Strategy Contract | v1.0 | In progress |  |  |  | Strategy plugin registry/swap tasks and related exit criteria remain unchecked |
+| 3 Database and Audit Logging | v1.0 | In progress |  |  |  | Exit criteria for persisted decision-path completeness and queryable lineage remain unchecked |
+| 4 Risk Engine Hardening | v1.0 | In progress |  |  |  | Daily/weekly loss, slippage, correlation, and kill-switch simulation criteria remain unchecked |
+| 5 Baseline Backtesting and Validation | v1.0 | In progress |  |  |  | Baseline report and validation criteria are not yet marked complete in this tracker |
+| 6 AI Pipeline and Walk-Forward Training | v1.1 | In progress |  |  |  | Data extraction/label generation and OOS superiority criterion remain unchecked |
+| 7 ONNX Inference Integration | v1.1 | In progress |  |  |  | Inference output logging, model-version wiring, and latency acceptance remain unchecked |
+| 8 Multi-Symbol Portfolio Runtime | v1.2 | In progress |  |  |  | Universe/symbol metadata tasks and simulation exit criterion remain unchecked |
+| 9 Monitoring and Dashboard | v1.3 | In progress |  |  |  | Full API data binding and operator diagnosis exit criterion remain unchecked |
 | 10 Demo and Micro-Live Rollout | v1.3 | Blocked |  |  |  | Awaiting broker/MT5 setup and demo approval |
 | 11 Multi-Strategy Runtime Integration | v2.0 | Not started |  |  |  |  |
 | 12 Shared Allocator and Model Promotion Automation | v2.0 | Not started |  |  |  |  |
 | 13 Managed Azure Migration and Environment Promotion | v2.1 | Not started |  |  |  |  |
+
+Evidence note:
+- `requirements_traceability_matrix.md` currently shows all requirements as `Not verified`, so no phase should be marked complete until evidence links are attached and statuses are updated.
 
 ## Phase 0 - Project Bootstrap (Target v1.0)
 Objective:

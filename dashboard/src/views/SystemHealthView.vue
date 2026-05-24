@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { apiGet } from '../api'
+import PageHeader from '../components/PageHeader.vue'
 
 const POLL_INTERVAL_MS = 10_000
 const STALE_AFTER_MS = POLL_INTERVAL_MS * 2
@@ -97,6 +98,8 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="space-y-4">
+    <PageHeader icon="heartbeat" title="System Health" subtitle="Backend, DB, model loader, and provider telemetry with freshness visibility" />
+
     <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
       <div class="flex flex-wrap items-start justify-between gap-2">
         <h2 class="text-sm font-semibold">System Health Snapshot</h2>
@@ -109,7 +112,7 @@ onBeforeUnmount(() => {
       <p v-else-if="error" class="mt-2 text-sm text-[var(--accent-danger)]">{{ error }}</p>
     </section>
 
-    <div class="grid gap-4 lg:grid-cols-3">
+    <div class="grid gap-4 lg:grid-cols-4">
       <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
         <h3 class="mb-2 text-sm font-semibold">Backend</h3>
         <p class="text-sm">{{ health?.telemetry.backend ?? 'N/A' }}</p>
@@ -118,6 +121,12 @@ onBeforeUnmount(() => {
       <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
         <h3 class="mb-2 text-sm font-semibold">Database</h3>
         <p class="text-sm">{{ health?.telemetry.database ?? 'N/A' }}</p>
+      </section>
+
+      <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
+        <h3 class="mb-2 text-sm font-semibold">Model Loader</h3>
+        <p class="text-sm">{{ health?.telemetry.modelLoader ?? 'N/A' }}</p>
+        <p class="text-sm text-[var(--text-secondary)]">{{ health?.telemetry.modelReason ?? 'No current model loading issue.' }}</p>
       </section>
 
       <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">

@@ -79,6 +79,7 @@ scripts\start-dashboard-dev.bat
 scripts\start-dev-stack.bat
 scripts\check-local-health.bat
 scripts\stop-db.bat
+scripts\deploy-ea-to-mt5.bat "C:\\Users\\USER\\AppData\\Roaming\\MetaQuotes\\Terminal\\INSTANCE_ID"
 ```
 
 What each script does:
@@ -89,6 +90,7 @@ What each script does:
 - `start-dev-stack.bat`: starts DB and launches backend/dashboard dev servers in separate terminal windows.
 - `check-local-health.bat`: checks backend health endpoint (`http://localhost:3000/health` by default).
 - `stop-db.bat`: stops PostgreSQL service.
+- `deploy-ea-to-mt5.bat`: copies `mql5/Experts/DailyBreakoutEA.mq5` into the selected MT5 data directory under `MQL5/Experts`.
 
 ## Run Locally
 

@@ -1,10 +1,27 @@
-<script setup lang="ts">
-defineProps<{
-  title: string
-  loading?: boolean
-  error?: string
-  updatedAt?: string
-}>()
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'DataPanel',
+  props: {
+    title: {
+      type: String,
+      required: true,
+    },
+    loading: {
+      type: Boolean,
+      default: false,
+    },
+    error: {
+      type: String,
+      default: '',
+    },
+    updatedAt: {
+      type: String,
+      default: '',
+    },
+  },
+})
 </script>
 
 <template>

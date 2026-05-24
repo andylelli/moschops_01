@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { apiGet } from '../api'
+import PageHeader from '../components/PageHeader.vue'
 
 const POLL_INTERVAL_MS = 10_000
 const STALE_AFTER_MS = POLL_INTERVAL_MS * 2
@@ -154,7 +155,28 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="grid gap-4 lg:grid-cols-2">
+  <div class="space-y-4">
+    <PageHeader icon="shield-halved" title="Risk and Safety" subtitle="Kill-switch posture, provider freshness, and guard-window visibility" />
+
+    <div class="grid gap-4 lg:grid-cols-3">
+      <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 shadow-sm">
+        <h2 class="mb-2 text-sm font-semibold">Kill Switch</h2>
+        <p class="text-base font-semibold text-[var(--accent-success)]">NORMAL</p>
+        <p class="text-xs text-[var(--text-secondary)]">Protective exits remain allowed under all policy states.</p>
+      </section>
+      <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 shadow-sm">
+        <h2 class="mb-2 text-sm font-semibold">Daily Risk Utilization</h2>
+        <p class="text-base font-semibold">58%</p>
+        <p class="text-xs text-[var(--text-secondary)]">Within configured tolerance.</p>
+      </section>
+      <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 shadow-sm">
+        <h2 class="mb-2 text-sm font-semibold">Veto Driver (24h)</h2>
+        <p class="text-base font-semibold">NEWS_PROVIDER_STALE</p>
+        <p class="text-xs text-[var(--text-secondary)]">Most frequent reason code</p>
+      </section>
+    </div>
+
+    <div class="grid gap-4 lg:grid-cols-2">
     <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
       <div class="mb-2 flex flex-wrap items-start justify-between gap-2">
         <h2 class="text-sm font-semibold">News Provider Status</h2>
@@ -224,5 +246,6 @@ onBeforeUnmount(() => {
         </li>
       </ul>
     </section>
+    </div>
   </div>
 </template>

@@ -286,3 +286,44 @@ model NewsGuardWindow {
   @@index([symbolScope, startsAtUtc, endsAtUtc])
   @@index([startsAtUtc, endsAtUtc])
 }
+
+model HistoricalDownloadJob {
+  id             String   @id @default(cuid())
+  source         String
+  symbol         String
+  timeframe      String
+  fromDate       DateTime
+  toDate         DateTime
+  status         String
+  requestedBy    String?
+  requestedAtUtc DateTime @default(now())
+  completedAtUtc DateTime?
+  barsFetched    Int      @default(0)
+  barsInserted   Int      @default(0)
+  barsSkipped    Int      @default(0)
+  errorMessage   String?
+  metadataJson   Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([symbol, timeframe, requestedAtUtc])
+  @@index([status, requestedAtUtc])
+}
+
+model HistoricalBar {
+  id             String   @id @default(cuid())
+  source         String
+  symbol         String
+  timeframe      String
+  barCloseTimeUtc DateTime
+  open           Float
+  high           Float
+  low            Float
+  close          Float
+  volume         Float?
+  rawJson        Json?
+  createdAt      DateTime @default(now())
+
+  @@unique([source, symbol, timeframe, barCloseTimeUtc])
+  @@index([symbol, timeframe, barCloseTimeUtc])
+}

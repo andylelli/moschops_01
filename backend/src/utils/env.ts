@@ -45,6 +45,8 @@ const EnvSchema = z.object({
   NEWS_STALE_MINUTES: z.coerce.number().int().min(5).default(30),
   NEWS_DEGRADED_MINUTES: z.coerce.number().int().min(5).default(15),
   NEWS_ENABLED_SYMBOLS: z.string().default("EURUSD,GBPUSD,USDJPY,XAUUSD"),
+  TRAINING_PYTHON_EXECUTABLE: z.string().optional(),
+  TRAINING_TIMEOUT_SECONDS: z.coerce.number().int().min(30).max(1800).default(600),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

@@ -1,7 +1,7 @@
 # API Contract Specification
 
 Version: 1.0  
-Last updated: 2026-05-21
+Last updated: 2026-05-23
 
 ## Purpose
 Define the backend HTTP contract used by the EA, backend services, and dashboard.
@@ -66,6 +66,7 @@ AI reason code behavior:
 - `AI_MODEL_UNAVAILABLE` when model is unavailable/degraded.
 - `AI_INFERENCE_ERROR` when runtime inference fails.
 - `AI_INVALID_FEATURES` when feature payload is invalid.
+- `AI_MANDATORY_BLOCK` when strategy profile requires AI and no valid score is available.
 
 ### POST /risk-check
 Request fields:
@@ -123,6 +124,18 @@ Returns the active model metadata for a strategy/environment.
 ### GET /performance
 Returns performance snapshots, risk events, and summary metrics.
 
+### GET /score-distribution
+Returns score histogram bins derived from persisted model predictions for AI monitoring.
+
+Query fields:
+- strategyId (optional)
+- bins (default 10, range 5-20)
+- lookback (default 1000, range 50-5000)
+
+Response fields:
+- count
+- bins[]: `label`, `lower`, `upper`, `count`
+
 ### GET /health
 Returns backend dependency status.
 
@@ -142,6 +155,141 @@ Returns currently active guard windows derived from normalized FMP events.
 ### GET /news/providers
 Returns provider status and freshness, including provider name (`FMP`) and active tier.
 
+### POST /historical-data/download
+Triggers provider-backed historical bar download and persists bars in PostgreSQL.
+
+Request fields:
+- source (`FMP`)
+- symbol (for example `EURUSD`)
+- timeframe (`M15|H1|H4|D1`)
+- fromDate (`YYYY-MM-DD`)
+- toDate (`YYYY-MM-DD`)
+- replaceExisting (boolean)
+- requestedBy (optional operator identifier)
+
+Response fields:
+- job.id
+- job.status (`COMPLETED|FAILED`)
+- job.symbol
+- job.timeframe
+- job.fromDate
+- job.toDate
+- job.barsFetched
+- job.barsInserted
+- job.barsSkipped
+- job.requestedAtUtc
+- job.completedAtUtc
+
+### GET /historical-data/jobs
+Returns recent historical download jobs for UI status/audit visibility.
+
+Query fields:
+- limit (default 50, max 200)
+
+### GET /historical-data/bars
+Returns persisted bars from PostgreSQL for a selected symbol/timeframe/date range.
+
+Query fields:
+- source (`FMP`)
+- symbol
+- timeframe (`M15|H1|H4|D1`)
+- fromDate (optional)
+- toDate (optional)
+- limit (default 500, max 2000)
+
+### GET /strategy-config/current
+Returns the active strategy runtime and training-default configuration profile for a strategy/version.
+
+Query fields:
+- strategyId (default `daily-breakout-5-10`)
+- strategyVersion (default `1.0.0`)
+
+Response fields:
+- strategyId
+- strategyVersion
+- riskProfile
+- source (`default|database`)
+- createdAt
+- config.aiThresholds (`full`, `half`)
+- config.aiMandatory
+- config.trainingDefaults (dataset profile, horizon, CV, calibration, threshold, feature toggles)
+
+### PUT /strategy-config/current
+Persists a new strategy runtime configuration snapshot.
+
+Request fields:
+- strategyId
+- strategyVersion
+- riskProfile
+- config.aiThresholds (`full`, `half`, with `half < full`)
+- config.aiMandatory
+- config.trainingDefaults (dataset profile, horizon, CV, calibration, threshold, feature toggles)
+
+Response fields:
+- same as `GET /strategy-config/current`
+
+### POST /strategy-config/reset
+Persists a fresh default strategy configuration snapshot for the specified strategy/version.
+
+Request fields:
+- strategyId (optional; defaults to `daily-breakout-5-10`)
+- strategyVersion (optional; defaults to `1.0.0`)
+
+Response fields:
+- ok
+- profile (same shape as `GET /strategy-config/current`)
+
+### GET /training/runs
+Returns recent persisted training sessions for timeline and achieved-metrics views.
+
+Query fields:
+- limit (default 20, max 100)
+
+Response fields:
+- count
+- items[]: `trainingRunId`, `strategyId`, `modelVersion`, `datasetVersion`, `status`, `metricsJson`, `createdAt`
+
+Training metrics payload (`metricsJson`) includes:
+- `outcome`: `aucMean`, `aucMin`, `brierMean`, `brierMax`, `calibrationDrift`
+- `diagnostics.confusionMatrix`: `labels`, `matrix`, `threshold`
+- `diagnostics.rocCurve[]`: `threshold`, `fpr`, `tpr`
+- `diagnostics.prCurve[]`: `threshold`, `recall`, `precision`
+- `diagnostics.calibrationBins[]`: `bucketStart`, `bucketEnd`, `predictedMean`, `observedRate`, `count`
+- `diagnostics.featureImportance[]`: `feature`, `importance`
+
+### GET /training/runs/:trainingRunId
+Returns one persisted training session by ID.
+
+### POST /training/runs
+Executes a training run from operator-supplied wizard settings, then persists run state and achieved metrics for operator review.
+
+Request fields:
+- strategyId
+- strategyVersion
+- mode (`easy|advanced`)
+- presetName
+- datasetProfile
+- horizonBars
+- cvFolds
+- calibration (`isotonic|platt|none`)
+- threshold
+- includeMacro
+- includeNewsWindows
+- includeSessionFeatures
+- enableClassWeights
+
+Response fields:
+- run object with persisted training run metadata and `metricsJson`
+
+Execution behavior:
+- Backend creates a `RUNNING` training run record, executes `training/train_walk_forward.py`, then updates status to `COMPLETED` on success.
+- If script execution fails, backend updates status to `FAILED` and returns `500` with `TRAINING_RUN_FAILED`.
+- `metricsJson.execution` persists execution telemetry (`command`, `model`, and stdout/stderr tails) for operator diagnostics.
+
+Diagnostics behavior:
+- If `models/training_report.json` includes diagnostics artifacts, they are persisted into `metricsJson.diagnostics`.
+- If diagnostics are missing in artifact input, backend persists deterministic fallback diagnostics derived from achieved AUC/Brier/calibration values so UI diagnostics remain available.
+
 ## Idempotency
 - decisionKey = strategyId + symbol + timeframe + barCloseTimeUtc
 - Replays with the same decisionId must not create duplicate business records.
@@ -153,7 +301,7 @@ Returns provider status and freshness, including provider name (`FMP`) and activ
 - 401: unauthorized
 - 409: duplicate or conflicting decision key
 - 422: semantically invalid request
-- 500: unexpected server failure
+- 500: unexpected server failure or training execution failure (`TRAINING_RUN_FAILED`)
 
 ### Risk Decision Flow
 

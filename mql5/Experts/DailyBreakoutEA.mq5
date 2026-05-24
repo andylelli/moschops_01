@@ -16,6 +16,57 @@ datetime lastBarTime = 0;
 double dailyStartEquity = 0;
 datetime dailyResetTime = 0;
 
+double CurrentAsk()
+{
+  return SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+}
+
+double CurrentBid()
+{
+  return SymbolInfoDouble(_Symbol, SYMBOL_BID);
+}
+
+double ReadIndicatorValue(int handle, int shift)
+{
+  if(handle == INVALID_HANDLE)
+  {
+    return 0;
+  }
+
+  double values[];
+  ArraySetAsSeries(values, true);
+  if(CopyBuffer(handle, 0, shift, 1, values) <= 0)
+  {
+    return 0;
+  }
+
+  return values[0];
+}
+
+double SmaValue(int period, int shift)
+{
+  int handle = iMA(_Symbol, PERIOD_D1, period, 0, MODE_SMA, PRICE_CLOSE);
+  double value = ReadIndicatorValue(handle, shift);
+  if(handle != INVALID_HANDLE)
+  {
+    IndicatorRelease(handle);
+  }
+
+  return value;
+}
+
+double AtrValue(int period, int shift)
+{
+  int handle = iATR(_Symbol, PERIOD_D1, period);
+  double value = ReadIndicatorValue(handle, shift);
+  if(handle != INVALID_HANDLE)
+  {
+    IndicatorRelease(handle);
+  }
+
+  return value;
+}
+
 bool IsNewCompletedBar()
 {
   datetime currentBar = iTime(_Symbol, PERIOD_D1, 1);
@@ -33,10 +84,11 @@ bool IsNewCompletedBar()
   return false;
 }
 
-double HighestHigh55()
+double HighestHighLookback()
 {
   double hh = -DBL_MAX;
-  for(int i = 2; i <= 56; i++)
+  int endShift = InpBreakoutLookback + 1;
+  for(int i = 2; i <= endShift; i++)
   {
     double val = iHigh(_Symbol, PERIOD_D1, i);
     if(val > hh)
@@ -47,10 +99,11 @@ double HighestHigh55()
   return hh;
 }
 
-double LowestLow55()
+double LowestLowLookback()
 {
   double ll = DBL_MAX;
-  for(int i = 2; i <= 56; i++)
+  int endShift = InpBreakoutLookback + 1;
+  for(int i = 2; i <= endShift; i++)
   {
     double val = iLow(_Symbol, PERIOD_D1, i);
     if(val < ll)
@@ -89,7 +142,9 @@ bool HasExistingPosition()
 
 bool CheckSafetyPreconditions()
 {
-  int spreadPips = (int)((Ask() - Bid()) / _Point);
+  double ask = CurrentAsk();
+  double bid = CurrentBid();
+  int spreadPips = (int)((ask - bid) / _Point);
   if(spreadPips > InpMaxSpreadPips)
   {
     Print("SAFETY: Spread ", spreadPips, " exceeds max ", InpMaxSpreadPips);
@@ -104,14 +159,21 @@ bool CheckSafetyPreconditions()
     return false;
   }
 
-  if((SYMBOL_TRADE_MODE_LONG && Ask() == 0) || (SYMBOL_TRADE_MODE_SHORT && Bid() == 0))
+  ENUM_SYMBOL_TRADE_MODE tradeMode = (ENUM_SYMBOL_TRADE_MODE)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_MODE);
+  if(tradeMode == SYMBOL_TRADE_MODE_DISABLED || tradeMode == SYMBOL_TRADE_MODE_CLOSEONLY)
+  {
+    Print("SAFETY: Symbol trade mode blocks new entries");
+    return false;
+  }
+
+  if(ask <= 0 || bid <= 0)
   {
     Print("SAFETY: Symbol not tradeable or quotes unavailable");
     return false;
   }
 
   double minMarginRequired = SymbolInfoDouble(_Symbol, SYMBOL_MARGIN_INITIAL);
-  double freeMargin = AccountInfoDouble(ACCOUNT_FREEMARGIN);
+  double freeMargin = AccountInfoDouble(ACCOUNT_MARGIN_FREE);
   if(freeMargin < minMarginRequired * 1.5)
   {
     Print("SAFETY: Insufficient free margin (", freeMargin, " vs required ", minMarginRequired * 1.5, ")");
@@ -171,7 +233,7 @@ bool ExecuteTrade(string direction, double lots, double stopDistancePips, double
     return false;
   }
 
-  double entryPrice = (direction == "BUY") ? Ask() : Bid();
+  double entryPrice = (direction == "BUY") ? CurrentAsk() : CurrentBid();
   double stopPrice = (direction == "BUY") ? (entryPrice - stopDistancePips * _Point) : (entryPrice + stopDistancePips * _Point);
   double takeProfit = (direction == "BUY") ? (entryPrice + (stopDistancePips * 2) * _Point) : (entryPrice - (stopDistancePips * 2) * _Point);
 
@@ -227,11 +289,17 @@ void OnTick()
   }
 
   double close1 = iClose(_Symbol, PERIOD_D1, 1);
-  double smaTrend = iMA(_Symbol, PERIOD_D1, InpTrendSma, 0, MODE_SMA, PRICE_CLOSE, 1);
-  double smaFast = iMA(_Symbol, PERIOD_D1, InpFastSma, 0, MODE_SMA, PRICE_CLOSE, 1);
-  double atr = iATR(_Symbol, PERIOD_D1, InpAtrPeriod, 1);
-  double hh55 = HighestHigh55();
-  double ll55 = LowestLow55();
+  double smaTrend = SmaValue(InpTrendSma, 1);
+  double smaFast = SmaValue(InpFastSma, 1);
+  double atr = AtrValue(InpAtrPeriod, 1);
+  double hh55 = HighestHighLookback();
+  double ll55 = LowestLowLookback();
+
+  if(smaTrend <= 0 || smaFast <= 0 || atr <= 0)
+  {
+    Print("Indicator values unavailable - skipping bar");
+    return;
+  }
 
   bool hasPosition = HasExistingPosition();
   if(hasPosition)

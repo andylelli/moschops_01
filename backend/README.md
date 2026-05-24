@@ -35,6 +35,7 @@ Notes:
 - `POST /signal` requires `marketSnapshot.volatility` as rolling volatility input.
 - Startup performs ONNX model preflight; check `GET /health` telemetry for `modelLoader` state.
 - `POST /portfolio/evaluate` persists decisions atomically and is replay-safe via request hash or `portfolioDecisionId`.
+- `POST /training/runs` executes `../training/train_walk_forward.py`; if Python is not discoverable via PATH, set `TRAINING_PYTHON_EXECUTABLE` in backend `.env`.
 
 ## Run Service
 From `backend/`:

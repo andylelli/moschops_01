@@ -42,6 +42,16 @@ body.mobile-menu-open {
   overflow: hidden;
 }
 
+:focus-visible {
+  outline: 2px solid var(--accent-info);
+  outline-offset: 2px;
+}
+
+table td,
+table th {
+  min-height: 40px;
+}
+
 /* Keep checkbox rows aligned even when labels vary in length. */
 .check-row {
   display: grid;

@@ -2,10 +2,31 @@
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { useUiStore } from './stores/ui'
+import KillSwitchBanner from './components/KillSwitchBanner.vue'
+import AlertRail from './components/AlertRail.vue'
 
 const ui = useUiStore()
 const route = useRoute()
 const isMobileMenuOpen = ref(false)
+
+const alertItems = [
+  {
+    id: 'ALR-2201',
+    severity: 'warning' as const,
+    title: 'Provider Freshness Degrading',
+    detail: 'News sync latency crossed 2x polling interval in one region.',
+    source: 'news-provider',
+    timestamp: '2026-05-22T14:25:00Z',
+  },
+  {
+    id: 'ALR-2202',
+    severity: 'info' as const,
+    title: 'Training Capacity Available',
+    detail: 'Queue depth low. Preset launch windows are open.',
+    source: 'training-orchestrator',
+    timestamp: '2026-05-22T14:20:00Z',
+  },
+]
 
 const onKeyDown = (event: KeyboardEvent) => {
   if (event.key === 'Escape') {
@@ -34,11 +55,24 @@ watch(isMobileMenuOpen, (open) => {
   document.body.classList.toggle('mobile-menu-open', open)
 })
 
+watch(
+  () => [ui.environment, ui.strategy, ui.operatorRole, ui.datasetProfile, ui.startDate, ui.endDate],
+  () => {
+    ui.persistContext()
+  },
+)
+
 const navItems = [
-  { to: '/overview', label: 'Overview' },
-  { to: '/trades-signals', label: 'Trades and Signals' },
-  { to: '/risk-safety', label: 'Risk and Safety' },
-  { to: '/system-health', label: 'System Health' },
+  { to: '/overview', label: 'Overview', icon: 'gauge-high' },
+  { to: '/portfolio', label: 'Portfolio', icon: 'briefcase' },
+  { to: '/trades-signals', label: 'Trades and Signals', icon: 'arrow-right-arrow-left' },
+  { to: '/ai-models', label: 'AI and Models', icon: 'microchip' },
+  { to: '/training-studio', label: 'Training Studio', icon: 'flask' },
+  { to: '/risk-safety', label: 'Risk and Safety', icon: 'shield-halved' },
+  { to: '/system-health', label: 'System Health', icon: 'heartbeat' },
+  { to: '/incidents-runbooks', label: 'Incidents and Runbooks', icon: 'triangle-exclamation' },
+  { to: '/admin', label: 'Admin', icon: 'user-shield' },
+  { to: '/settings', label: 'Settings', icon: 'gear' },
 ]
 </script>
 
@@ -73,9 +107,10 @@ const navItems = [
           v-for="item in navItems"
           :key="`mobile-${item.to}`"
           :to="item.to"
-          class="rounded px-3 py-2 text-sm"
+          class="flex items-center gap-2 rounded px-3 py-2 text-sm"
           :class="route.path === item.to ? 'bg-[var(--accent-info)] text-white' : 'bg-[var(--bg-elevated)]'"
         >
+          <FontAwesomeIcon :icon="['fas', item.icon]" class="text-xs" />
           {{ item.label }}
         </RouterLink>
       </nav>
@@ -90,18 +125,48 @@ const navItems = [
         >
           Menu
         </button>
-        <h1 class="mr-auto text-lg font-semibold">Moschops Operator Console</h1>
-        <span class="rounded border border-[var(--accent-danger)] bg-[color:color-mix(in_srgb,var(--accent-danger),transparent_88%)] px-2 py-1 text-xs">
-          Kill Switch: Normal
+        <div class="mr-auto">
+          <h1 class="flex items-center gap-2 text-lg font-semibold">
+            <FontAwesomeIcon :icon="['fas', 'bolt']" class="text-sm text-[var(--accent-warning)]" />
+            Moschops Operator Console
+          </h1>
+          <p class="text-xs text-[var(--text-secondary)]">Risk-first monitoring and training control center</p>
+        </div>
+
+        <span class="rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-xs font-semibold">
+          Role: {{ ui.operatorRole }}
         </span>
-        <select v-model="ui.environment" class="w-20 rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-sm">
+        <select v-model="ui.environment" class="w-24 rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-sm" aria-label="Environment selector">
           <option value="dev">dev</option>
           <option value="demo">demo</option>
           <option value="pilot">pilot</option>
           <option value="live">live</option>
         </select>
+
+        <select v-model="ui.operatorRole" class="w-28 rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-sm" aria-label="Operator role selector">
+          <option value="viewer">viewer</option>
+          <option value="analyst">analyst</option>
+          <option value="admin">admin</option>
+        </select>
+
+        <select v-model="ui.strategy" class="w-40 rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-sm" aria-label="Strategy selector">
+          <option value="daily-breakout-5-10">breakout-5-10</option>
+          <option value="mean-revert-eur">mean-revert-eur</option>
+          <option value="macro-momentum">macro-momentum</option>
+        </select>
+
+        <select v-model="ui.datasetProfile" class="w-36 rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-sm" aria-label="Dataset profile selector">
+          <option value="rolling-90d">rolling-90d</option>
+          <option value="rolling-180d">rolling-180d</option>
+          <option value="event-focused">event-focused</option>
+        </select>
+
+        <input v-model="ui.startDate" type="date" class="w-36 rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-sm" aria-label="Start date" />
+        <input v-model="ui.endDate" type="date" class="w-36 rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-sm" aria-label="End date" />
+
         <button class="w-[7.5rem] rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-1 text-center text-sm" @click="ui.toggleTheme()">
-          Theme: {{ ui.theme }}
+          <FontAwesomeIcon :icon="['fas', ui.theme === 'dark' ? 'moon' : 'sun']" class="mr-1" />
+          {{ ui.theme }}
         </button>
       </div>
       <nav class="mx-auto hidden max-w-7xl gap-2 overflow-auto px-4 pb-3 md:flex">
@@ -109,12 +174,23 @@ const navItems = [
           v-for="item in navItems"
           :key="item.to"
           :to="item.to"
-          class="rounded px-3 py-2 text-sm whitespace-nowrap"
+          class="flex items-center gap-2 rounded px-3 py-2 text-sm whitespace-nowrap"
           :class="route.path === item.to ? 'bg-[var(--accent-info)] text-white' : 'bg-[var(--bg-elevated)]'"
         >
+          <FontAwesomeIcon :icon="['fas', item.icon]" class="text-xs" />
           {{ item.label }}
         </RouterLink>
       </nav>
+
+      <div class="mx-auto grid max-w-7xl gap-3 px-4 pb-3">
+        <KillSwitchBanner
+          state="normal"
+          source="risk-engine"
+          reason="Fail-closed posture active; protective exits remain enabled"
+          timestamp="2026-05-22T14:25:00Z"
+        />
+        <AlertRail :alerts="alertItems" />
+      </div>
     </header>
     <main class="mx-auto max-w-7xl p-4">
       <RouterView />

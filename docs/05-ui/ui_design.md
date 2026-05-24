@@ -1,15 +1,55 @@
 # AI Trading System UI Design Specification
 
-Version: 1.0
-Last updated: 2026-05-20
-Status: Draft design blueprint for implementation
+Version: 1.2
+Last updated: 2026-05-22
+Status: Active design blueprint for implementation
+
+## UI Implementation Progress Tracker
+
+Last verified: 2026-05-22
+
+Status legend:
+- Not started
+- In progress
+- Blocked
+- Complete
+
+### Overall Snapshot
+
+| Metric | Value | Notes |
+|---|---|---|
+| Estimated overall implementation completion | 54% | Based on tracker rows below and current dashboard evidence |
+| Active blockers | 1 | Provider entitlement constraints may limit some data-rich UI validation flows |
+| Highest-priority open areas | Full API contract binding, training/admin diagnostic depth, visualization stack completion | Needed to satisfy sections 10-12, 14.1, and 19 |
+
+### Section-by-Section Tracker
+
+| Track ID | Spec section(s) | Scope | Status | Completion | Evidence / Notes |
+|---|---|---|---|---:|---|
+| UI-01 | 1, 2, 3, 4 | Product intent, IA, and top-level navigation model | In progress | 82 | Full top-level route set is wired; shell now exposes role chip, environment/strategy/date/profile context controls, and global risk-first header surfaces |
+| UI-02 | 5, 5.1 | Visual system, iconography, and polish standards | In progress | 45 | Tokenized theme base exists; Font Awesome integration and icon registry rollout still pending |
+| UI-03 | 6, 7 | Typography, spacing, and light/dark token behavior | In progress | 70 | Typography and token variables are implemented; full quality-pass spacing conformance pending |
+| UI-04 | 8 | Layout patterns and grid behavior | In progress | 74 | Global shell, responsive nav, alert rail, and persistent kill-switch banner patterns are now implemented; panel preset consistency still pending |
+| UI-05 | 9, 9.1, 9.2, 9.3, 9.4, 9.5 | Core component library and behavior contracts | In progress | 46 | `DataPanel`, `MetricCard`, `StatusBadge`, `KillSwitchBanner`, `AlertRail`, `RoleGuard`, and `TradeLedgerTable` are implemented; additional component contract coverage remains |
+| UI-06 | 10 | View-by-view design coverage | In progress | 52 | All top-level views are implemented; training/admin/risk/trades pages now include stronger interaction and control scaffolding, but several panels still use placeholder datasets |
+| UI-07 | 11, 11.1 | Visualization standards and graph tooling | Not started | 10 | Required chart stack and rich model/admin visual diagnostics are not yet integrated |
+| UI-08 | 12, 12.1 | Interaction and micro-interaction quality | In progress | 50 | Admin privileged actions now use explicit two-step confirmation with reason capture; deterministic motion and advanced training interaction quality pass still pending |
+| UI-09 | 13 | Accessibility and UX safety | In progress | 48 | Focus-visible styling, role-aware action gating, and text-labeled status badges are present; full WCAG validation and complete keyboard pass remain |
+| UI-10 | 14, 14.1 | Frontend architecture and data contract ownership | In progress | 50 | Vue/Pinia/router baseline exists; full route/state domain coverage and contract checks pending |
+| UI-11 | 15 | Responsive behavior and mobile safety | In progress | 62 | Mobile navigation plus table-to-card transform is now implemented in trade ledger surfaces; compact chart/diagnostic modes still pending |
+| UI-12 | 16 | Content and terminology consistency | In progress | 45 | Reason-code oriented copy is present in some views; full canonical terminology pass pending |
+| UI-13 | 17 | Non-functional UI requirements | Not started | 15 | Performance and reliability targets defined but not yet formally measured |
+| UI-14 | 18 | Build plan execution | In progress | 42 | Phase A-C are substantially implemented and parts of Phase E/F have started via training/admin action flows and accessibility hardening |
+| UI-15 | 19 | Design QA checklist completion | In progress | 18 | Items covering theme persistence, risk visibility, icon semantics, and part of mobile table behavior now have implementation evidence; formal QA evidence is still open |
 
 ## Contents
+- [UI Implementation Progress Tracker](#ui-implementation-progress-tracker)
 - [1. Purpose](#1-purpose)
 - [2. Design Goals](#2-design-goals)
 - [3. Product Surfaces](#3-product-surfaces)
 - [4. Information Architecture](#4-information-architecture)
 - [5. Visual Design System](#5-visual-design-system)
+- [5.1 Iconography and Visual Polish](#51-iconography-and-visual-polish)
 - [6. Typography and Spacing](#6-typography-and-spacing)
 - [7. Color Tokens and Themes](#7-color-tokens-and-themes)
 - [8. Layout Patterns](#8-layout-patterns)
@@ -21,7 +61,9 @@ Status: Draft design blueprint for implementation
 - [9.5 Data Freshness and Update Behavior](#95-data-freshness-and-update-behavior)
 - [10. View-by-View Design](#10-view-by-view-design)
 - [11. Data Visualization Standards](#11-data-visualization-standards)
+- [11.1 Training and Admin Visualization Profiles](#111-training-and-admin-visualization-profiles)
 - [12. Interaction and Motion](#12-interaction-and-motion)
+- [12.1 Interaction Quality Pass](#121-interaction-quality-pass)
 - [13. Accessibility and UX Safety](#13-accessibility-and-ux-safety)
 - [14. State, Routing, and Frontend Architecture](#14-state-routing-and-frontend-architecture)
 - [14.1 Data Contract Ownership](#141-data-contract-ownership)
@@ -40,6 +82,8 @@ This document focuses on:
 - Risk-first workflows
 - Reliable decision monitoring
 - Fast operator interpretation during normal and stressed market conditions
+- Admin-safe system control and auditing workflows
+- AI training workflows that are easy for first-time operators and powerful for advanced users
 
 ## 2. Design Goals
 1. Make risk state obvious within 3 seconds of opening the app.
@@ -48,14 +92,18 @@ This document focuses on:
 4. Ensure every view is usable in both light and dark modes.
 5. Preserve visual consistency with design tokens and reusable components.
 6. Ensure all critical workflows are fully usable on mobile devices.
+7. Make AI training setup runnable in under 2 minutes for default presets.
+8. Provide rich visual diagnostics so model quality and risk can be interpreted at a glance.
 
 ## 3. Product Surfaces
 Primary surface:
 - Web dashboard for operations, monitoring, and decision audit
+- Web control center for admin governance and AI training lifecycle
 
 Secondary surfaces:
 - Read-only wallboard mode for always-on status display
 - Mobile responsive condensed dashboard for on-call checks
+- Guided training wizard mode for rapid and safe model iteration
 
 Out of scope:
 - Trade execution UI that bypasses risk engine safeguards
@@ -66,16 +114,20 @@ Top-level navigation:
 2. Portfolio
 3. Trades and Signals
 4. AI and Models
-5. Risk and Safety
-6. System Health
-7. Incidents and Runbooks
-8. Settings
+5. Training Studio
+6. Risk and Safety
+7. System Health
+8. Incidents and Runbooks
+9. Admin
+10. Settings
 
 Utility areas:
 - Global environment selector (demo, pilot, live)
 - Strategy selector
 - Date/time range filter
 - Theme toggle (light/dark)
+- Dataset/profile selector (training surfaces)
+- Operator role chip (viewer, analyst, admin)
 
 News provider visibility requirement:
 - System Health and Risk and Safety views must display configured news provider and tier (`FMP`, `FREE` for `v1.x`, `BASIC` for `v2+`) with freshness state.
@@ -90,6 +142,39 @@ Core principles:
 - Consistent card and panel structure
 - Semantic color usage only for meaning, not decoration
 - Dense but scannable hierarchy with strong headings and compact body text
+- Strong icon and label pairing for rapid scanning in high-pressure workflows
+
+## 5.1 Iconography and Visual Polish
+Icon system standard:
+- Use Font Awesome as the default icon library across navigation, status badges, and action controls.
+- Use SVG component rendering through Vue, not icon fonts.
+- Use one visual family baseline (`solid` for navigation/status, `regular` for secondary/detail actions).
+
+Recommended frontend package installs:
+1. `npm install @fortawesome/fontawesome-svg-core @fortawesome/free-solid-svg-icons @fortawesome/free-regular-svg-icons @fortawesome/vue-fontawesome`
+2. Optional licensed tier: `@fortawesome/pro-solid-svg-icons` and `@fortawesome/pro-regular-svg-icons` only when a valid license is available.
+
+Icon usage rules:
+- Every icon that conveys state must include an adjacent text label in critical workflows.
+- Icon-only buttons must include accessible name attributes and visible focus style.
+- Keep icon sizes consistent by role: 14px for inline metadata, 16px for table/status rows, 20px for section headers, 24px for primary KPI/status tiles.
+- Do not mix more than two icon visual weights on the same surface.
+- Do not use decorative icons in kill-switch, risk veto, or incident-critical banners.
+
+Navigation and status icon mapping baseline:
+- Overview: `faGaugeHigh`
+- Portfolio: `faBriefcase`
+- Trades and Signals: `faArrowRightArrowLeft`
+- AI and Models: `faMicrochip`
+- Training Studio: `faFlask`
+- Risk and Safety: `faShieldHalved`
+- System Health: `faHeartbeat`
+- Incidents and Runbooks: `faTriangleExclamation`
+- Admin: `faUserShield`
+- Settings: `faGear`
+- Success state: `faCircleCheck`
+- Warning state: `faTriangleExclamation`
+- Critical state: `faCircleXmark`
 
 ## 6. Typography and Spacing
 Typography stack:
@@ -107,6 +192,11 @@ Type scale:
 Spacing scale:
 - Base unit: 4px
 - Primary layout gaps: 8, 12, 16, 24, 32
+
+Quality pass typography and spacing rules:
+- Header rows and section intros must maintain a minimum 12px vertical rhythm.
+- Dense operational tables must preserve at least 40px row height for readability and tap comfort.
+- Label-value pairs in KPI and status cards must align to a consistent baseline grid.
 
 ## 7. Color Tokens and Themes
 Use CSS variables mapped through Tailwind theme extensions.
@@ -172,6 +262,22 @@ Required components:
 - DateRangePicker
 - StrategyFilter
 - EnvironmentSwitcher
+- TrainingWizard
+- TrainingPresetSelector
+- HyperparameterEditor
+- DatasetCoverageHeatmap
+- TrainingRunTimeline
+- MetricsComparisonChart
+- FeatureImportancePanel
+- ConfusionMatrixCard
+- RocPrPanel
+- ArtifactRegistryTable
+- RunPromotionDrawer
+- JobQueueBoard
+- AuditLogTable
+- RoleGuard
+- IconActionButton
+- IconLabel
 
 Component rules:
 - All components support light and dark mode tokens
@@ -223,6 +329,18 @@ Required contracts by component type:
 - Control components (`ThemeToggle`, `DateRangePicker`, filters):
 	- Must support keyboard operation and clear reset behavior.
 	- Must emit one event per finalized change to avoid excessive network churn.
+- Training components (`TrainingWizard`, `HyperparameterEditor`, `TrainingRunTimeline`):
+	- Must support Easy mode (preset-first) and Advanced mode (full option panel).
+	- Must provide safe defaults and show estimated run cost/time before launch.
+	- Must persist draft configuration and allow clone-from-previous-run.
+- Admin components (`RoleGuard`, `AuditLogTable`, `RunPromotionDrawer`):
+	- Must enforce role-aware visibility and action gating.
+	- Must require explicit confirmation for high-impact actions (promotion, rollback, disable).
+	- Must record actor, timestamp, and reason for every privileged action.
+- Icon components (`IconActionButton`, `IconLabel`):
+	- Must render Font Awesome icons via Vue component wrappers.
+	- Must include an accessible text name and preserve minimum contrast in both themes.
+	- Must avoid icon-only signaling for critical state changes.
 
 ## 9.3 State Model: Active and Inactive
 State taxonomy:
@@ -265,6 +383,8 @@ Must do:
 - Preserve user context (filters, pagination, theme) across route changes.
 - Ensure all controls are accessible by keyboard and screen reader.
 - Use design tokens for all colors, spacing, borders, and shadows.
+- Keep training status, queue state, and last successful model promotion visible above fold in Training Studio.
+- Keep admin action audit trail visible and filterable by actor, action type, and time range.
 
 Must not do:
 - Must not hide critical risk alerts behind tabs or collapses by default.
@@ -273,6 +393,8 @@ Must not do:
 - Must not reset filters silently on refresh or route transition.
 - Must not show stale data without explicit stale indicator.
 - Must not hardcode theme colors in component styles.
+- Must not allow model promotion, rollback, or policy override without role and confirmation checks.
+- Must not hide failed training diagnostics; root-cause context must always be reachable in one click.
 
 ## 9.5 Data Freshness and Update Behavior
 Polling defaults:
@@ -321,6 +443,26 @@ AI and Models:
 - Calibration and drift indicators
 - Active/staged model versions and promotion history
 
+Training Studio:
+- Guided training wizard (6-step) that covers workflow selection, data/validation parameters, feature toggles, AI runtime policy, launch review, and completion actions
+- Easy mode path with recommended presets by strategy and timeframe
+- Advanced mode with expandable options for feature set, label policy, split policy, CV, calibration, and thresholds
+- One-click launch from preset with editable guardrails
+- Training run timeline with queue state, duration estimate, and resource profile
+- Visual diagnostics: confusion matrix, ROC/PR, feature importance, calibration curve, reliability bins, and drift deltas
+- Wizard completion state must provide direct navigation shortcuts to diagnostics and training timeline evidence.
+- Run comparison workspace with side-by-side metrics and threshold simulations
+- Artifact panel with ONNX, metadata, and reproducibility hash visibility
+- Promotion readiness checklist with explicit risk gate status
+
+Admin:
+- Role and access overview (viewer, analyst, admin)
+- System toggles with scoped blast-radius descriptions
+- Approval queue for model promotion and rollback
+- Audit log explorer with actor, action, reason, and affected scope
+- Configuration snapshots and rollback controls
+- Provider entitlement and quota status board
+
 Risk and Safety:
 - Kill-switch status and history
 - Daily/weekly loss progress against limits
@@ -341,18 +483,49 @@ Settings:
 - Default filters
 - Notification settings
 
+Second-pass quality expectations for all views:
+- Each page header must include one primary icon + title + short operational subtitle.
+- Each critical panel must expose state, source, and timestamp in a single visual scan row.
+- Empty and degraded states must provide next-step guidance, not just status text.
+
 ## 11. Data Visualization Standards
 Charts:
 - Equity curve: line chart with drawdown overlay
 - Risk exposure: stacked bar
 - Signal outcomes: histogram and segmented bars
 - Health metrics: sparkline plus threshold bands
+- Training loss and validation curves: dual-axis line with confidence bands
+- Confusion matrix: annotated heatmap
+- ROC and Precision-Recall: interactive line charts with threshold markers
+- Feature importance: ranked horizontal bars with cohort filter
+- Calibration reliability: bucketed line + residual bars
+- Run comparison: radar summary + sortable metric table
+- Pipeline topology and dependency views for admin/training lineage
 
 Visualization rules:
 - Never rely on color alone to convey critical state
 - Add labels/tooltips for all threshold lines
 - Use consistent time axis formatting in UTC
 - Show confidence intervals where applicable for model metrics
+
+## 11.1 Training and Admin Visualization Profiles
+Graphing and charting stack:
+- Baseline: ECharts with vue-echarts for operational and performance charts
+- High-interaction diagnostics: Plotly.js for zoomable model-quality visuals
+- Relationship and dependency views: Cytoscape for pipeline lineage and dependency graphs
+- Optional custom rendering: D3 for bespoke visuals not covered by existing libraries
+
+Recommended frontend package installs:
+1. `npm install echarts vue-echarts`
+2. `npm install plotly.js-dist-min vue-plotly`
+3. `npm install cytoscape`
+4. `npm install d3`
+
+Visualization implementation policy:
+- Use route-level code splitting and dynamic imports for heavy graph libraries.
+- Prefer pre-aggregated backend series for large datasets to keep UI responsive.
+- Provide static fallback summaries when interactive graphs fail to load.
+- Keep chart legends and icon indicators consistent with Font Awesome status semantics.
 
 ## 12. Interaction and Motion
 Motion principles:
@@ -364,6 +537,21 @@ Interactions:
 - Hover reveals detail, not hidden primary controls
 - Critical actions require confirmation modals
 - Filter changes preserve context and scroll position
+
+## 12.1 Interaction Quality Pass
+Required micro-interaction standards:
+- Use deterministic transition durations (120ms, 160ms, 180ms only).
+- Keep skeleton-to-content transitions visually stable with no panel jump.
+- Use icon-assisted confirmations for high-impact actions, including explicit consequence copy.
+- Require two-step confirmation for model promotion, rollback, and global disable actions.
+
+Training ease-of-use standards:
+- Easy mode launches must expose a recommended preset first and hide advanced fields by default.
+- Advanced mode must be searchable and grouped by category (data, labels, CV, thresholds, calibration, export).
+- Every advanced setting must include inline help text and safe default value.
+- Guided wizard flow must provide ordered step navigation with per-step validation before launch.
+- Guided wizard modal must support keyboard-safe dismissal (Escape key) and preserve operator-entered values across steps.
+- Training launch summary must show expected runtime, resource profile, and rollback plan before submit.
 
 ## 13. Accessibility and UX Safety
 Accessibility minimums:
@@ -384,6 +572,9 @@ Framework and libraries:
 - Pinia
 - Vue Router
 - ECharts
+- Plotly.js (training diagnostics)
+- Cytoscape (admin/training dependency graphs)
+- Font Awesome (`@fortawesome/vue-fontawesome` and icon packs)
 
 State domains:
 - Session and auth state
@@ -391,6 +582,8 @@ State domains:
 - Health and incident state
 - Risk and portfolio state
 - Model and AI state
+- Training configuration, jobs, and run artifacts state
+- Admin approvals, role scopes, and audit state
 
 Routing strategy:
 - Nested route layout under app shell
@@ -404,9 +597,11 @@ View-to-data ownership map:
 - Portfolio: positions, exposure summaries, allocation events, correlation summaries.
 - Trades and Signals: signals, rejected signals, trades, and live open trades from `GET /trades/open`.
 - AI and Models: model versions, model predictions, training runs, calibration summaries.
+- Training Studio: training profiles, run requests, job statuses, run metrics, artifact metadata, promotion candidate assessments.
 - Risk and Safety: risk events, kill-switch state, veto reasons, recent limit breaches.
 - System Health: backend health endpoints, database health, EA connectivity, model loader status.
 - Incidents and Runbooks: incident events, acknowledgements, linked runbook steps.
+- Admin: role assignments, approval records, config versions, operational toggles, and audit events.
 - Settings: persisted client preferences such as theme, layout, and default filters.
 
 Contract rules:
@@ -472,10 +667,13 @@ Reliability:
 Security:
 - Role-aware route protection
 - No sensitive secrets rendered in frontend payloads
+- Mandatory action-level authorization checks for admin and model promotion workflows
+- Privileged action audit trail retention and exportable review views
 
 ## 18. Build Plan for UI
 Phase A:
 - App shell, navigation, theme system, base tokens
+- Font Awesome integration with centralized icon registry and navigation/status icon mapping
 
 Phase B:
 - Overview and system health screens
@@ -487,6 +685,10 @@ Phase D:
 - AI/model and incidents/runbooks views
 
 Phase E:
+- Training Studio easy mode and advanced mode with diagnostics visuals
+- Admin control center with approvals, audit logs, and rollback surfaces
+
+Phase F:
 - Accessibility hardening and visual QA in both themes
 
 ## 19. Design QA Checklist
@@ -499,3 +701,12 @@ Phase E:
 7. No horizontal overflow on supported mobile widths.
 8. All critical actions and alerts are reachable and readable on mobile.
 9. Tables and charts provide a validated compact mobile presentation.
+10. Training Studio supports both one-click preset launch and advanced configuration editing.
+11. Training diagnostics charts (loss, ROC/PR, confusion matrix, calibration, feature importance) render with fallback states.
+12. Admin actions are role-gated, confirmed, and auditable with actor and reason.
+13. Font Awesome icons are consistently applied across navigation, statuses, and action controls.
+14. Icon semantics match state semantics (success, warning, critical) and include text where critical.
+15. Easy training mode is usable end-to-end without touching advanced settings.
+16. Advanced training mode remains discoverable, grouped, and fully keyboard accessible.
+17. Guided training wizard covers all runtime and training parameters with step-level validation and launch review.
+18. Wizard post-launch completion step exposes quick navigation to diagnostics and training-session timeline.

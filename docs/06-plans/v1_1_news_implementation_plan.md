@@ -1,7 +1,7 @@
 # v1.1 News Implementation Plan
 
 Version: 1.1
-Last updated: 2026-05-21
+Last updated: 2026-05-22
 Status: Execution in progress
 Scope target: v1.1 scheduled-news delivery only
 
@@ -13,7 +13,7 @@ Scope target: v1.1 scheduled-news delivery only
 | C. Normalization and window resolver | Complete | Backend Lead | Phase 3 complete | Mapping, dedup key policy, and window materialization implemented |
 | D. Risk integration | Complete | Backend + Risk Lead | Phase 4 complete | Policy integrated into signal, risk-check, and portfolio flows |
 | E. API and dashboard exposure | Complete | Backend + Frontend Lead | Phase 5 complete | News routes, health telemetry, and dashboard build verification completed |
-| F. Verification and operations | In progress | QA + Ops Lead | Phase 6 complete | Backend test suite passed; evidence package assembly pending |
+| F. Verification and operations | In progress | QA + Ops Lead | Phase 6 complete | Verification suite complete; evidence package and go or no-go review in progress |
 
 Status legend:
 - Not started: no implementation work begun.
@@ -28,8 +28,8 @@ Status legend:
 | Overall completion | 92% | 11 of 12 task rows complete |
 | Current phase | Phase 6 | Verification and evidence packaging |
 | Current critical path | F1 -> F2 | Test execution and evidence acceptance |
-| Open blockers | 0 | Track in blocker register below |
-| Evidence artifacts completed | 1/4 | Backend tests/build and migration verification captured |
+| Open blockers | 1 | BL-03 provider entitlement remains open for historical date-range verification |
+| Evidence artifacts completed | 3/4 | API response captures, DB verification records, and dashboard artifacts captured; timeline evidence pending |
 | Go-live readiness | Not ready | Requires section 12 checklist completion |
 
 ### Phase Gate Tracker
@@ -40,7 +40,7 @@ Status legend:
 | Phase 3 | Guard windows materialized deterministically | Backend Lead | Complete | 100 | Phase 2 | 2026-05-21 | 2026-05-21 | Severity mapping and deterministic upsert/materialization implemented |
 | Phase 4 | Risk integration parity across all decision routes | Backend + Risk Lead | Complete | 100 | Phase 3 | 2026-05-21 | 2026-05-21 | Shared news policy integrated into signal, risk-check, portfolio |
 | Phase 5 | News and health APIs exposed with dashboard binding | Backend + Frontend Lead | Complete | 100 | Phase 4 | 2026-05-21 | 2026-05-21 | News routes active and dashboard build passes |
-| Phase 6 | Demonstration evidence package accepted | QA + Ops Lead | In progress | 70 | Phase 5 | TBD | TBD | Backend tests passed; remaining evidence artifacts pending |
+| Phase 6 | Demonstration evidence package accepted | QA + Ops Lead | In progress | 85 | Phase 5 | TBD | TBD | Verification complete; evidence package and go or no-go review still open |
 
 ### Workstream Detail Tracker
 | Workstream | Task ID | Task summary | Status | Owner | Dependency | Blocker | Start date | Target date | Done criteria met |
@@ -56,13 +56,14 @@ Status legend:
 | E | E1 | Add /news/upcoming, /news/active, /news/providers | Complete | Backend Lead | D2 | None | 2026-05-21 | 2026-05-21 | Yes |
 | E | E2 | Bind dashboard views and provider status indicators | Complete | Frontend Lead | E1 | None | 2026-05-21 | 2026-05-21 | Yes |
 | F | F1 | Complete unit, integration, and system test suite | Complete | QA Lead | E2 | None | 2026-05-21 | 2026-05-21 | Yes |
-| F | F2 | Complete evidence package and go or no-go review | Not started | Ops Lead | F1 | None | TBD | TBD | No |
+| F | F2 | Complete evidence package and go or no-go review | In progress | Ops Lead | F1 | BL-03 | 2026-05-22 | TBD | No |
 
 ### Blocker Register
 | Blocker ID | Description | Impacted phase | Owner | Mitigation plan | ETA | Status |
 |---|---|---|---|---|---|---|
 | BL-01 | Local database unavailable at localhost:5432 (migration apply failed P1001) | Phase 1, 3, 6 | Backend Lead | Resolved by clearing port conflict and starting compose postgres service | 2026-05-21 | Closed |
 | BL-02 | Node runtime version incompatible with vitest/vite dependency requirements | Phase 6 | QA + Frontend Lead | Upgraded Node runtime and reran toolchain verification | 2026-05-21 | Closed |
+| BL-03 | Historical economic calendar access returns provider-tier error (`402` stable historical, `403` v3) | Phase 6 | Data Lead | Keep scheduled sync deterministic for supported ranges, document entitlement boundary, and complete evidence package with explicit blocked scope | 2026-05-23 | Open |
 
 ### Progress Update Rules
 1. Update the status and percent complete fields at least twice per week during active implementation.

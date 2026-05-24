@@ -1,7 +1,7 @@
 # Documentation Completeness Checklist
 
 Version: 1.0
-Last updated: 2026-05-22
+Last updated: 2026-05-23
 Status: Tracking baseline
 
 ## Purpose
@@ -26,7 +26,7 @@ Track the minimum documentation set required for a production-grade, auditable t
 | DOC-07 | Incident and Operations Runbooks | P0 | Ops Lead | In progress | Playbooks for backend/DB/model failures and kill-switch events with triage/escalation/recovery checks | `../04-operations/incident_and_operations_runbooks.md` |
 | DOC-08 | SLO/SLI and Alerting Matrix | P0 | SRE/Ops Lead | In progress | SLI definitions, SLO targets, alert thresholds, routing policy, and required operator actions documented | `../04-operations/slo_sli_and_alerting_matrix.md` |
 | DOC-09 | Release and Change Management Guide | P1 | Tech Lead + Release Manager | In progress | Versioning scheme, release checklist, migration rollback, and model deployment rollback procedures | `../01-roadmap/release_and_change_management.md` |
-| DOC-10 | Frontend Implementation Addendum | P1 | Frontend Lead | In progress | Component-level acceptance criteria, state behavior matrix, and accessibility/theme compliance checklist | `../05-ui/ui_design.md`, `../02-architecture/lld_v1.md`, `../02-architecture/lld_v2.md` |
+| DOC-10 | Frontend Implementation Addendum | P1 | Frontend Lead | In progress | Component-level acceptance criteria, state behavior matrix, and accessibility/theme compliance checklist including guided Training Studio wizard coverage | `../05-ui/ui_design.md`, `../02-architecture/lld_v1.md`, `../02-architecture/lld_v2.md` |
 | DOC-11 | Environment and Deployment Topology | P1 | Platform Lead | In progress | Dev/demo/pilot/live topology, config policy, feature flags, and promotion gates documented | `../04-operations/environment_and_deployment_topology.md` |
 | DOC-12 | Documentation Governance Standard | P2 | Tech Lead | In progress | Source-of-truth mapping, PR update policy, templates, and review checklist for future docs | `documentation_governance.md` |
 | DOC-13 | News Provider Decision and LLD Integration Record | P0 | Tech Lead + Backend Lead | In progress | FMP provider decision (`FREE` for v1.x, `BASIC` for v2+) is consistent across LLD/roadmap/spec/ops docs; traceability row and runbook tracker present | `../02-architecture/lld_v1_1_news.md`, `../02-architecture/lld_v2.md`, `../06-plans/news_integration_plan.md`, `../00-governance/requirements_traceability_matrix.md` |

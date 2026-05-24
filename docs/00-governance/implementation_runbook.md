@@ -1,7 +1,7 @@
 # Full Implementation Runbook and Progress Tracker
 
 Version: 1.0
-Last updated: 2026-05-22
+Last updated: 2026-05-23
 Owner: Tech Lead
 Status: Active
 
@@ -32,6 +32,33 @@ Primary references:
 - [ ] Workstream 7 (P1): Contract and document harmonization.
 - [ ] Workstream 8 (P1): Verification and CI evidence hardening.
 
+Progress note (2026-05-22 UI increment):
+- Implemented risk-first global header surfaces (kill-switch banner and alert rail), role-aware admin action gating with two-step confirmation flow, and mobile table-to-card transform for trade ledger views.
+
+Progress note (2026-05-23 data-ingestion increment):
+- Added provider-backed historical data download flow with persisted job audit + bars storage and Training Studio UI controls for symbol/timeframe/date-range selection.
+
+Progress note (2026-05-23 ai-config-and-metrics increment):
+- Added persisted strategy runtime settings API (`/strategy-config/current`) and wired `/signal` AI threshold/mandatory behavior to stored strategy configuration.
+- Added training session APIs (`POST/GET /training/runs`) and score distribution endpoint (`GET /score-distribution`), then bound AI and Training Studio views to live session metrics.
+- Added operator-facing narrative guides and inline tooltips for AI/Training controls.
+
+Progress note (2026-05-23 diagnostics-visualization increment):
+- Extended persisted training metrics payload with diagnostics artifacts (confusion matrix, ROC/PR points, calibration bins, feature importance).
+- Replaced Training Studio placeholder charts with live diagnostics visualizations sourced from latest completed training session.
+
+Progress note (2026-05-23 training-wizard increment):
+- Added a guided 6-step Training Studio wizard covering mode/preset, data-validation parameters, feature toggles, AI runtime policy, launch review, and completion actions.
+- Wired wizard completion to save strategy runtime settings, launch training in one operator flow, and provide direct navigation to diagnostics and timeline sections.
+
+Progress note (2026-05-23 mt5-deploy increment):
+- Added a Windows deployment script to copy `DailyBreakoutEA.mq5` into a provided MT5 terminal data path (`scripts/deploy-ea-to-mt5.bat`).
+- Updated setup and README docs with script-driven MT5 EA deployment steps and credential-handling guidance.
+
+Progress note (2026-05-23 wizard-training-execution increment):
+- Updated `POST /training/runs` to execute the Python training pipeline (`training/train_walk_forward.py`) using wizard-supplied settings.
+- Added persisted training run lifecycle states (`RUNNING`, `COMPLETED`, `FAILED`) and execution telemetry for operator diagnostics.
+
 ## Global Phase Dashboard
 | Phase | Version target | Status | Owner | Start date | End date | Blockers |
 |---|---|---|---|---|---|---|
@@ -44,7 +71,7 @@ Primary references:
 | 6 AI Pipeline and Walk-Forward Training | v1.1 | In progress |  |  |  | Data extraction/label generation and OOS superiority criterion remain unchecked |
 | 7 ONNX Inference Integration | v1.1 | In progress |  |  |  | Inference output logging, model-version wiring, and latency acceptance remain unchecked |
 | 8 Multi-Symbol Portfolio Runtime | v1.2 | In progress |  |  |  | Universe/symbol metadata tasks and simulation exit criterion remain unchecked |
-| 9 Monitoring and Dashboard | v1.3 | In progress |  |  |  | Full API data binding and operator diagnosis exit criterion remain unchecked |
+| 9 Monitoring and Dashboard | v1.3 | In progress |  |  |  | Full API contract binding remains; role-gated admin flows and mobile trade-ledger safety patterns were added in latest UI increment |
 | 10 Demo and Micro-Live Rollout | v1.3 | Blocked |  |  |  | Awaiting broker/MT5 setup and demo approval |
 | 11 Multi-Strategy Runtime Integration | v2.0 | Not started |  |  |  |  |
 | 12 Shared Allocator and Model Promotion Automation | v2.0 | Not started |  |  |  |  |
@@ -118,7 +145,10 @@ Tasks:
 - [x] Implement POST /log-rejected-signal.
 - [x] Implement GET /model-version.
 - [x] Implement GET /performance.
+- [x] Implement GET /score-distribution.
 - [x] Implement GET /health.
+- [x] Implement GET/PUT /strategy-config/current.
+- [x] Implement GET/POST /training/runs.
 - [ ] Define StrategyPlugin TypeScript interface.
 - [ ] Define MarketSnapshot interface.
 - [ ] Define StrategyFeatures interface.
@@ -218,6 +248,7 @@ Objective:
 Tasks:
 - [ ] Implement data extraction from PostgreSQL.
 - [ ] Implement label generation (+2R before -1R within 20 bars).
+- [x] Implement historical data download endpoints with DB persistence and UI-managed request controls.
 - [x] Implement time-based splits and walk-forward windows.
 - [x] Train Logistic Regression model.
 - [x] Train Random Forest model.
@@ -282,8 +313,12 @@ Tasks:
 - [x] Build equity, drawdown, PnL views.
 - [x] Build trade ledger and rejected signal views.
 - [x] Build AI score distribution and drift proxy views.
+- [x] Bind AI and Training Studio views to live training-session metrics and persisted strategy settings.
 - [x] Build risk events and kill-switch history views.
 - [x] Add backend, DB, and EA connectivity health monitors.
+- [x] Add role-aware admin confirmation flow and mobile-safe table-to-card ledger presentation.
+- [x] Add narrative modal guidance and inline tooltips for advanced AI/training controls.
+- [x] Add guided training wizard flow that walks operators through all training/runtime parameters with validation, launch review, and post-launch navigation shortcuts.
 
 Deliverables:
 - [x] Operator dashboard with light and dark mode (UI complete).

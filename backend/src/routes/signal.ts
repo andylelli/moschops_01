@@ -10,6 +10,7 @@ import { Prisma } from "@prisma/client";
 import { evaluateNewsPolicy } from "../services/news-policy";
 import { isEntryAction } from "../services/news-domain";
 import { buildInferenceFeatures } from "../services/feature-schema";
+import { loadStrategyRuntimeProfile } from "../services/strategy-config";
 
 const signalSchema = z.object({
   decisionId: z.string().min(1),
@@ -60,6 +61,9 @@ export async function signalRoutes(app: FastifyInstance): Promise<void> {
 
     const risk = evaluateSignalLevelRisk(input);
     const strategyAction = evaluateDailyBreakout(input);
+    const strategyProfile = await loadStrategyRuntimeProfile(input.strategyId, input.strategyVersion);
+    const aiThresholds = strategyProfile.config.aiThresholds;
+    const aiMandatory = strategyProfile.config.aiMandatory;
     const newsPolicy = await evaluateNewsPolicy({
       symbol: input.symbol,
       isEntryAction: isEntryAction(strategyAction),
@@ -85,10 +89,10 @@ export async function signalRoutes(app: FastifyInstance): Promise<void> {
     }
 
     if (typeof inferredScore === "number") {
-      if (inferredScore >= RISK_LIMITS.aiScoreThresholds.full) {
+      if (inferredScore >= aiThresholds.full) {
         sizeBucket = "FULL";
         aiReasons.push("AI_SCORE_APPLIED");
-      } else if (inferredScore >= RISK_LIMITS.aiScoreThresholds.half) {
+      } else if (inferredScore >= aiThresholds.half) {
         sizeBucket = "HALF";
         aiReasons.push("AI_HALF_SIZE");
         aiReasons.push("AI_SCORE_APPLIED");
@@ -97,6 +101,11 @@ export async function signalRoutes(app: FastifyInstance): Promise<void> {
         aiReasons.push("AI_SKIP");
         aiReasons.push("AI_SCORE_APPLIED");
       }
+    }
+
+    if (aiMandatory && typeof inferredScore !== "number") {
+      sizeBucket = "SKIP";
+      aiReasons.push("AI_MANDATORY_BLOCK");
     }
 
     const riskApproved = risk.approved && newsPolicy.policyAction !== "BLOCK_NEW";

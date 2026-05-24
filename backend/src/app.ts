@@ -11,6 +11,9 @@ import { metricsRoutes } from "./routes/metrics";
 import { openTradesRoutes } from "./routes/trades-open";
 import { portfolioRoutes } from "./routes/portfolio";
 import { newsRoutes } from "./routes/news";
+import { historicalDataRoutes } from "./routes/historical-data";
+import { strategyConfigRoutes } from "./routes/strategy-config";
+import { trainingRoutes } from "./routes/training";
 import { startNewsSync } from "./services/news-sync";
 import { ensureActiveModelVersionRecord } from "./services/model-metadata";
 
@@ -36,6 +39,9 @@ export function buildApp(): FastifyInstance {
   void app.register(openTradesRoutes);
   void app.register(portfolioRoutes);
   void app.register(newsRoutes);
+  void app.register(historicalDataRoutes);
+  void app.register(strategyConfigRoutes);
+  void app.register(trainingRoutes);
 
   app.addHook("onReady", async () => {
     await ensureActiveModelVersionRecord(app.log);

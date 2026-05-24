@@ -25,7 +25,11 @@ if /I "%~1"=="--check" (
 )
 
 call "%SCRIPTS_DIR%\start-db.bat"
-if errorlevel 1 exit /b 1
+if errorlevel 1 (
+  echo [start-dev-stack] ERROR: Database startup failed.
+  echo [start-dev-stack] Resolve docker issues first, then rerun this script.
+  exit /b 1
+)
 
 echo [start-dev-stack] Launching backend window...
 start "moschops-backend-dev" cmd /k ""%SCRIPTS_DIR%\start-backend-dev.bat""

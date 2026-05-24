@@ -47,6 +47,11 @@ Required values:
 - LOG_LEVEL
 - PORT
 
+Optional values for wizard-triggered training execution:
+
+- TRAINING_PYTHON_EXECUTABLE (set when Python is not resolvable via `py` or `python` in PATH)
+- TRAINING_TIMEOUT_SECONDS (default 600)
+
 ## 5. Run Services
 
 Backend:
@@ -69,11 +74,21 @@ npm run test
 
 1. Install and open MetaTrader 5 on Windows host.
 2. Log in to a demo account.
-3. Compile and attach EA from mql5/Experts/DailyBreakoutEA.mq5.
-4. In MT5 options, enable Algo Trading.
-5. In MT5 options, enable WebRequest and allow backend base URL.
-6. Verify EA payload includes required marketSnapshot.volatility value.
-7. Run controlled dry test and confirm backend receives signal and risk-check requests.
+3. Deploy EA source into your MT5 terminal data folder:
+
+```bat
+scripts\deploy-ea-to-mt5.bat "C:\Users\USER\AppData\Roaming\MetaQuotes\Terminal\INSTANCE_ID"
+```
+
+4. Compile and attach EA from MQL5/Experts/DailyBreakoutEA.mq5 in MetaEditor.
+5. In MT5 options, enable Algo Trading.
+6. In MT5 options, enable WebRequest and allow backend base URL.
+7. Verify EA payload includes required marketSnapshot.volatility value.
+8. Run controlled dry test and confirm backend receives signal and risk-check requests.
+
+Credentials note:
+
+- Keep broker login/password/server in MT5 terminal only. Do not store MT5 account credentials in repository files.
 
 ## 8. Real Historical Data for Training
 

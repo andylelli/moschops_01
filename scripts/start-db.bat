@@ -9,6 +9,20 @@ if not exist "%COMPOSE_FILE%" (
   exit /b 1
 )
 
+where docker >nul 2>&1
+if errorlevel 1 (
+  echo [start-db] ERROR: docker CLI not found in PATH.
+  echo [start-db] Install Docker Desktop and ensure the docker command is available.
+  exit /b 1
+)
+
+docker info >nul 2>&1
+if errorlevel 1 (
+  echo [start-db] ERROR: Docker engine is not running.
+  echo [start-db] Start Docker Desktop and wait until the engine is running, then retry.
+  exit /b 1
+)
+
 if /I "%~1"=="--check" (
   echo [start-db] Ready. Compose file found at "%COMPOSE_FILE%".
   exit /b 0

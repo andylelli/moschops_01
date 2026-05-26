@@ -1,7 +1,7 @@
 # Full Implementation Runbook and Progress Tracker
 
 Version: 1.0
-Last updated: 2026-05-23
+Last updated: 2026-05-24
 Owner: Tech Lead
 Status: Active
 
@@ -58,6 +58,21 @@ Progress note (2026-05-23 mt5-deploy increment):
 Progress note (2026-05-23 wizard-training-execution increment):
 - Updated `POST /training/runs` to execute the Python training pipeline (`training/train_walk_forward.py`) using wizard-supplied settings.
 - Added persisted training run lifecycle states (`RUNNING`, `COMPLETED`, `FAILED`) and execution telemetry for operator diagnostics.
+
+Progress note (2026-05-24 training-runtime-preflight increment):
+- Added `GET /training/runtime/health` backend preflight probe and Training Studio runtime check button to validate Python interpreter and required package availability before launch.
+- Updated backend CORS methods to include `PUT` so wizard save-and-launch flow can persist strategy settings cross-origin in local dev.
+
+Progress note (2026-05-24 training-outcome-interpretability increment):
+- Added percentage-based Training Studio outcome snapshot cards (estimated success likelihood, accuracy, capture rate, coverage, model skill, calibration alignment, worst-fold strength, and probability stability).
+- Added explicit operator guidance that estimated success likelihood is derived from historical training precision and does not guarantee live trading outcomes.
+
+Progress note (2026-05-24 user-guide increment):
+- Added new `docs/08-user-guide/user_guide.md` section with detailed end-to-end user guidance covering operations, dashboard navigation, and deep AI/training workflows.
+- Added prominent Overall Training Effectiveness percentage in Training Studio outcome panel for at-a-glance model quality triage.
+
+Progress note (2026-05-24 user-guide-how-to expansion):
+- Expanded user guide with comprehensive task-based How-To playbooks spanning startup, runtime health, dashboard operation, AI training, diagnostics interpretation, incident response, admin changes, and safe shutdown.
 
 ## Global Phase Dashboard
 | Phase | Version target | Status | Owner | Start date | End date | Blockers |

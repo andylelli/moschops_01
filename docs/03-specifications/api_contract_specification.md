@@ -239,6 +239,19 @@ Response fields:
 - ok
 - profile (same shape as `GET /strategy-config/current`)
 
+### GET /training/runtime/health
+Returns Python runtime preflight status used by Training Studio before launch.
+
+Response fields:
+- runtime.ok
+- runtime.configuredExecutable
+- runtime.command
+- runtime.executable
+- runtime.pythonVersion
+- runtime.moduleStatus (required Python package import checks)
+- runtime.missingPackages
+- runtime.errors
+
 ### GET /training/runs
 Returns recent persisted training sessions for timeline and achieved-metrics views.
 

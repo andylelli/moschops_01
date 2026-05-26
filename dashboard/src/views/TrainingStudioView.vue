@@ -105,6 +105,15 @@ type StrategyConfigResponse = {
   }
 }
 
+type TrainingRuntimeHealthResponse = {
+  ok: boolean
+  command: string | null
+  executable: string | null
+  pythonVersion: string | null
+  missingPackages: string[]
+  errors: string[]
+}
+
 type TrainingRun = {
   id: string
   trainingRunId: string
@@ -194,6 +203,9 @@ const trainingRuns = ref<TrainingRun[]>([])
 const trainingLoading = ref(false)
 const trainingError = ref('')
 const trainingSuccess = ref('')
+const runtimeHealthLoading = ref(false)
+const runtimeHealthStatus = ref('')
+const runtimeHealthError = ref('')
 
 const wizardStepState = computed(() => {
   const current = wizardSteps.find((step) => step.id === wizardStep.value)
@@ -223,6 +235,18 @@ function asNumber(value: unknown): number | null {
   }
 
   return null
+}
+
+function clamp01(value: number): number {
+  return Math.min(Math.max(value, 0), 1)
+}
+
+function formatPercentage(value: number | null, digits = 1): string {
+  if (value === null) {
+    return 'N/A'
+  }
+
+  return `${(clamp01(value) * 100).toFixed(digits)}%`
 }
 
 function getRunOutcomeMetric(run: TrainingRun, key: string): number | null {
@@ -443,6 +467,65 @@ const latestTrainingOutcome = computed(() => {
   }
 })
 
+const latestTrainingPercentages = computed(() => {
+  const outcome = latestTrainingOutcome.value
+  const diagnostics = latestDiagnostics.value
+
+  let estimatedSuccessLikelihood: number | null = null
+  let overallAccuracy: number | null = null
+  let positiveCaptureRate: number | null = null
+  let signalCoverageRate: number | null = null
+
+  if (diagnostics) {
+    const matrix = diagnostics.confusionMatrix.matrix
+    const trueNegative = matrix[0][0]
+    const falsePositive = matrix[0][1]
+    const falseNegative = matrix[1][0]
+    const truePositive = matrix[1][1]
+
+    const total = trueNegative + falsePositive + falseNegative + truePositive
+    const predictedPositive = truePositive + falsePositive
+    const actualPositive = truePositive + falseNegative
+
+    estimatedSuccessLikelihood = predictedPositive > 0 ? truePositive / predictedPositive : null
+    overallAccuracy = total > 0 ? (truePositive + trueNegative) / total : null
+    positiveCaptureRate = actualPositive > 0 ? truePositive / actualPositive : null
+    signalCoverageRate = total > 0 ? predictedPositive / total : null
+  }
+
+  return {
+    estimatedSuccessLikelihood,
+    overallAccuracy,
+    positiveCaptureRate,
+    signalCoverageRate,
+    modelSkillVsRandom: outcome.aucMean === null ? null : (outcome.aucMean - 0.5) / 0.5,
+    calibrationAlignment: outcome.calibrationDrift === null ? null : 1 - outcome.calibrationDrift,
+    worstFoldStrength: outcome.aucMin === null ? null : outcome.aucMin,
+    probabilityStability: outcome.brierMean === null ? null : 1 - outcome.brierMean,
+  }
+})
+
+const overallTrainingEffectiveness = computed(() => {
+  const percentages = latestTrainingPercentages.value
+  const weightedMetrics = [
+    { value: percentages.estimatedSuccessLikelihood, weight: 0.22 },
+    { value: percentages.overallAccuracy, weight: 0.12 },
+    { value: percentages.positiveCaptureRate, weight: 0.1 },
+    { value: percentages.modelSkillVsRandom, weight: 0.2 },
+    { value: percentages.calibrationAlignment, weight: 0.18 },
+    { value: percentages.worstFoldStrength, weight: 0.1 },
+    { value: percentages.probabilityStability, weight: 0.08 },
+  ].filter((metric) => metric.value !== null)
+
+  if (weightedMetrics.length === 0) {
+    return null
+  }
+
+  const totalWeight = weightedMetrics.reduce((sum, metric) => sum + metric.weight, 0)
+  const weightedScore = weightedMetrics.reduce((sum, metric) => sum + (metric.value ?? 0) * metric.weight, 0)
+  return clamp01(weightedScore / totalWeight)
+})
+
 const historicalBarsAscending = computed(() =>
   [...historicalBars.value].sort(
     (a, b) => Date.parse(a.barCloseTimeUtc) - Date.parse(b.barCloseTimeUtc),
@@ -637,6 +720,32 @@ async function saveStrategyConfig() {
 async function loadTrainingRuns() {
   const result = await apiGet<{ count: number; items: TrainingRun[] }>('/training/runs?limit=20')
   trainingRuns.value = result.items
+}
+
+async function checkTrainingRuntime() {
+  runtimeHealthLoading.value = true
+  runtimeHealthStatus.value = ''
+  runtimeHealthError.value = ''
+
+  try {
+    const result = await apiGet<{ runtime: TrainingRuntimeHealthResponse }>('/training/runtime/health')
+    const runtime = result.runtime
+
+    if (runtime.ok) {
+      const versionLabel = runtime.pythonVersion ? `Python ${runtime.pythonVersion}` : 'Python runtime'
+      const executableLabel = runtime.executable ?? runtime.command ?? 'detected interpreter'
+      runtimeHealthStatus.value = `Training runtime ready: ${versionLabel} (${executableLabel}).`
+      return
+    }
+
+    const missingText = runtime.missingPackages.length > 0 ? ` Missing packages: ${runtime.missingPackages.join(', ')}.` : ''
+    const errorText = runtime.errors.length > 0 ? ` ${runtime.errors[0]}` : ''
+    runtimeHealthError.value = `Training runtime check failed.${missingText}${errorText}`
+  } catch (error) {
+    runtimeHealthError.value = toUiErrorMessage(error)
+  } finally {
+    runtimeHealthLoading.value = false
+  }
 }
 
 async function launchTrainingRun(): Promise<TrainingRun | null> {
@@ -919,6 +1028,9 @@ onUnmounted(() => {
           <button class="rounded border border-[var(--border-subtle)] px-3 py-1 text-sm" @click="showTrainingGuide = true">
             Training Guide
           </button>
+          <button class="rounded border border-[var(--border-subtle)] px-3 py-1 text-sm disabled:opacity-60" :disabled="runtimeHealthLoading" @click="checkTrainingRuntime">
+            {{ runtimeHealthLoading ? 'Checking Runtime...' : 'Check Training Runtime' }}
+          </button>
         </div>
         <div class="text-sm text-[var(--text-secondary)]">
           Estimated runtime: <span class="font-semibold text-[var(--text-primary)]">{{ launchSummary.runtime }}</span>
@@ -928,6 +1040,8 @@ onUnmounted(() => {
       <p class="mt-2 text-xs text-[var(--text-secondary)]">
         Strategy {{ strategyRuntime.strategyId }} v{{ strategyRuntime.strategyVersion }} | Config source: {{ strategyRuntime.source }}
       </p>
+      <p v-if="runtimeHealthStatus" class="mt-1 text-xs text-[var(--accent-success)]">{{ runtimeHealthStatus }}</p>
+      <p v-if="runtimeHealthError" class="mt-1 text-xs text-[var(--accent-danger)]">{{ runtimeHealthError }}</p>
     </section>
 
     <section class="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 shadow-sm">
@@ -1181,23 +1295,70 @@ onUnmounted(() => {
       </section>
     </div>
 
-    <section class="grid gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 text-sm shadow-sm md:grid-cols-4">
-      <article title="Latest out-of-sample AUC from completed training sessions.">
-        <p class="text-[var(--text-secondary)]">Latest AUC</p>
-        <p class="font-semibold">{{ latestTrainingOutcome.aucMean === null ? 'N/A' : latestTrainingOutcome.aucMean.toFixed(3) }}</p>
+    <section class="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 text-sm shadow-sm">
+      <div class="mb-3">
+        <h3 class="text-sm font-semibold">Training Outcome (Latest Completed Run)</h3>
+        <p class="text-xs text-[var(--text-secondary)]">
+          Percentages below summarize how well the latest model performed out-of-sample. Success likelihood is estimated from training-session precision,
+          not a guarantee of live trade outcomes.
+        </p>
+      </div>
+
+      <article class="mb-4 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-4" title="Weighted overall quality score from latest completed run diagnostics and outcome metrics.">
+        <p class="text-xs uppercase tracking-wide text-[var(--text-secondary)]">Overall Training Effectiveness</p>
+        <p
+          class="mt-1 text-4xl font-bold leading-none md:text-5xl"
+          :class="
+            overallTrainingEffectiveness === null
+              ? 'text-[var(--text-secondary)]'
+              : overallTrainingEffectiveness >= 0.75
+                ? 'text-[var(--accent-success)]'
+                : overallTrainingEffectiveness >= 0.6
+                  ? 'text-[var(--accent-warning)]'
+                  : 'text-[var(--accent-danger)]'
+          "
+        >
+          {{ formatPercentage(overallTrainingEffectiveness, 1) }}
+        </p>
       </article>
-      <article title="Latest out-of-sample Brier score from completed training sessions.">
-        <p class="text-[var(--text-secondary)]">Latest Brier</p>
-        <p class="font-semibold">{{ latestTrainingOutcome.brierMean === null ? 'N/A' : latestTrainingOutcome.brierMean.toFixed(4) }}</p>
-      </article>
-      <article title="Lower drift is better calibration agreement between predicted and observed frequencies.">
-        <p class="text-[var(--text-secondary)]">Calibration Drift</p>
-        <p class="font-semibold">{{ latestTrainingOutcome.calibrationDrift === null ? 'N/A' : latestTrainingOutcome.calibrationDrift.toFixed(4) }}</p>
-      </article>
-      <article title="Lower-bound AUC observed across folds for the latest completed run.">
-        <p class="text-[var(--text-secondary)]">Worst-fold AUC</p>
-        <p class="font-semibold">{{ latestTrainingOutcome.aucMin === null ? 'N/A' : latestTrainingOutcome.aucMin.toFixed(3) }}</p>
-      </article>
+
+      <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <article title="Estimated probability that predicted positive signals are truly positive (TP / (TP + FP)).">
+          <p class="text-[var(--text-secondary)]">Estimated Successful Trade Likelihood</p>
+          <p class="font-semibold">{{ formatPercentage(latestTrainingPercentages.estimatedSuccessLikelihood) }}</p>
+        </article>
+        <article title="Overall classification accuracy across both positive and negative classes.">
+          <p class="text-[var(--text-secondary)]">Overall Accuracy</p>
+          <p class="font-semibold">{{ formatPercentage(latestTrainingPercentages.overallAccuracy) }}</p>
+        </article>
+        <article title="Share of actual positives captured by the model (recall).">
+          <p class="text-[var(--text-secondary)]">Positive Capture Rate</p>
+          <p class="font-semibold">{{ formatPercentage(latestTrainingPercentages.positiveCaptureRate) }}</p>
+        </article>
+        <article title="Share of evaluated cases where the model emits a positive signal at the selected threshold.">
+          <p class="text-[var(--text-secondary)]">Signal Coverage Rate</p>
+          <p class="font-semibold">{{ formatPercentage(latestTrainingPercentages.signalCoverageRate) }}</p>
+        </article>
+        <article title="Model skill above random baseline derived from AUC.">
+          <p class="text-[var(--text-secondary)]">Model Skill vs Random</p>
+          <p class="font-semibold">{{ formatPercentage(latestTrainingPercentages.modelSkillVsRandom) }}</p>
+          <p class="text-xs text-[var(--text-secondary)]">Raw AUC {{ latestTrainingOutcome.aucMean === null ? 'N/A' : latestTrainingOutcome.aucMean.toFixed(3) }}</p>
+        </article>
+        <article title="Alignment between predicted and observed frequencies (higher is better).">
+          <p class="text-[var(--text-secondary)]">Calibration Alignment</p>
+          <p class="font-semibold">{{ formatPercentage(latestTrainingPercentages.calibrationAlignment) }}</p>
+          <p class="text-xs text-[var(--text-secondary)]">Drift {{ latestTrainingOutcome.calibrationDrift === null ? 'N/A' : latestTrainingOutcome.calibrationDrift.toFixed(4) }}</p>
+        </article>
+        <article title="Worst cross-validation fold quality from latest completed run.">
+          <p class="text-[var(--text-secondary)]">Worst Fold Strength</p>
+          <p class="font-semibold">{{ formatPercentage(latestTrainingPercentages.worstFoldStrength) }}</p>
+        </article>
+        <article title="Brier-derived probability stability estimate (1 - Brier).">
+          <p class="text-[var(--text-secondary)]">Probability Stability</p>
+          <p class="font-semibold">{{ formatPercentage(latestTrainingPercentages.probabilityStability) }}</p>
+          <p class="text-xs text-[var(--text-secondary)]">Raw Brier {{ latestTrainingOutcome.brierMean === null ? 'N/A' : latestTrainingOutcome.brierMean.toFixed(4) }}</p>
+        </article>
+      </div>
     </section>
 
     <section class="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 shadow-sm" v-if="mode === 'advanced'">
@@ -1637,8 +1798,8 @@ onUnmounted(() => {
             launch defaults so operators and runtime stay synchronized.
           </p>
           <p>
-            Launch Training Run records a new training session and stores achieved metrics. Use the Training Sessions table and metric cards to
-            compare sessions before promoting new model versions.
+            Launch Training Run records a new training session and stores achieved metrics. Use the Training Sessions table plus outcome percentage
+            cards to compare sessions before promoting new model versions.
           </p>
           <p>
             Diagnostics panels now visualize confusion matrix, ROC, precision-recall, calibration reliability bins, and feature importance from

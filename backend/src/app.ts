@@ -28,7 +28,10 @@ export function buildApp(): FastifyInstance {
     },
   });
 
-  void app.register(cors, { origin: true });
+  void app.register(cors, {
+    origin: true,
+    methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  });
   void app.register(sensible);
 
   void app.register(healthRoutes);

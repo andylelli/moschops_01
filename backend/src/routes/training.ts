@@ -158,6 +158,164 @@ function runCommand(command: string, args: string[], timeoutMs: number): Promise
   });
 }
 
+const runtimeHealthModules = ["pandas", "numpy", "sklearn", "onnx", "skl2onnx"] as const;
+
+interface TrainingRuntimeHealth {
+  ok: boolean;
+  configuredExecutable: string | null;
+  command: string | null;
+  executable: string | null;
+  pythonVersion: string | null;
+  moduleStatus: Record<string, boolean>;
+  missingPackages: string[];
+  errors: string[];
+}
+
+function parseLastJsonObject(stdout: string): Record<string, boolean> | null {
+  const lines = stdout
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .reverse();
+
+  for (const line of lines) {
+    try {
+      const parsed = JSON.parse(line) as unknown;
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        return parsed as Record<string, boolean>;
+      }
+    } catch {
+      // ignore lines that are not JSON
+    }
+  }
+
+  return null;
+}
+
+async function getTrainingRuntimeHealth(app: FastifyInstance): Promise<TrainingRuntimeHealth> {
+  const configuredExecutable = env.TRAINING_PYTHON_EXECUTABLE?.trim() || null;
+  const moduleFallback = Object.fromEntries(runtimeHealthModules.map((moduleName) => [moduleName, false])) as Record<string, boolean>;
+  const errors: string[] = [];
+
+  for (const candidate of buildPythonCandidates()) {
+    const commandLabel = `${candidate.command} ${candidate.baseArgs.join(" ")}`.trim();
+    const versionArgs = [...candidate.baseArgs, "-c", "import sys; print(sys.executable); print(sys.version.split()[0])"];
+
+    let versionResult: { stdout: string; stderr: string; exitCode: number | null };
+    try {
+      versionResult = await runCommand(candidate.command, versionArgs, 10000);
+    } catch (error) {
+      const maybeErrno = error as NodeJS.ErrnoException;
+      if (maybeErrno.code === "ENOENT") {
+        errors.push(`Python executable not found for candidate: ${candidate.command}`);
+        continue;
+      }
+
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`Runtime probe failed for ${commandLabel}: ${message}`);
+      continue;
+    }
+
+    if (versionResult.exitCode !== 0) {
+      errors.push(
+        `Python probe exited with code ${versionResult.exitCode ?? "unknown"} for ${commandLabel}. ${truncateForLog(versionResult.stderr || versionResult.stdout)}`,
+      );
+      continue;
+    }
+
+    const versionLines = versionResult.stdout
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+    const executable = versionLines[0] ?? candidate.command;
+    const pythonVersion = versionLines[1] ?? null;
+
+    const moduleArgs = [
+      ...candidate.baseArgs,
+      "-c",
+      `import importlib.util, json; modules=${JSON.stringify(runtimeHealthModules)}; print(json.dumps({m: importlib.util.find_spec(m) is not None for m in modules}))`,
+    ];
+
+    let moduleResult: { stdout: string; stderr: string; exitCode: number | null };
+    try {
+      moduleResult = await runCommand(candidate.command, moduleArgs, 10000);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`Package probe failed for ${commandLabel}: ${message}`);
+      return {
+        ok: false,
+        configuredExecutable,
+        command: commandLabel,
+        executable,
+        pythonVersion,
+        moduleStatus: moduleFallback,
+        missingPackages: [...runtimeHealthModules],
+        errors,
+      };
+    }
+
+    if (moduleResult.exitCode !== 0) {
+      errors.push(
+        `Package probe exited with code ${moduleResult.exitCode ?? "unknown"} for ${commandLabel}. ${truncateForLog(moduleResult.stderr || moduleResult.stdout)}`,
+      );
+      return {
+        ok: false,
+        configuredExecutable,
+        command: commandLabel,
+        executable,
+        pythonVersion,
+        moduleStatus: moduleFallback,
+        missingPackages: [...runtimeHealthModules],
+        errors,
+      };
+    }
+
+    const parsedModuleStatus = parseLastJsonObject(moduleResult.stdout);
+    if (!parsedModuleStatus) {
+      errors.push(`Package probe returned unexpected output for ${commandLabel}.`);
+      return {
+        ok: false,
+        configuredExecutable,
+        command: commandLabel,
+        executable,
+        pythonVersion,
+        moduleStatus: moduleFallback,
+        missingPackages: [...runtimeHealthModules],
+        errors,
+      };
+    }
+
+    const moduleStatus = Object.fromEntries(
+      runtimeHealthModules.map((moduleName) => [moduleName, parsedModuleStatus[moduleName] === true]),
+    ) as Record<string, boolean>;
+    const missingPackages = runtimeHealthModules.filter((moduleName) => !moduleStatus[moduleName]);
+
+    return {
+      ok: missingPackages.length === 0,
+      configuredExecutable,
+      command: commandLabel,
+      executable,
+      pythonVersion,
+      moduleStatus,
+      missingPackages,
+      errors,
+    };
+  }
+
+  app.log.warn({ configuredExecutable, errors }, "training runtime preflight failed to locate usable python interpreter");
+
+  return {
+    ok: false,
+    configuredExecutable,
+    command: null,
+    executable: null,
+    pythonVersion: null,
+    moduleStatus: moduleFallback,
+    missingPackages: [...runtimeHealthModules],
+    errors,
+  };
+}
+
 async function executeTrainingScript(payload: LaunchTrainingPayload, trainingRunId: string, app: FastifyInstance): Promise<{
   stdoutTail: string;
   stderrTail: string;
@@ -434,6 +592,11 @@ function buildDiagnostics(report: TrainingReport | null, params: { aucMean: numb
 }
 
 export async function trainingRoutes(app: FastifyInstance): Promise<void> {
+  app.get("/training/runtime/health", async () => {
+    const runtime = await getTrainingRuntimeHealth(app);
+    return { runtime };
+  });
+
   app.get("/training/runs", async (req, reply) => {
     const parsed = trainingRunQuerySchema.safeParse(req.query);
     if (!parsed.success) {

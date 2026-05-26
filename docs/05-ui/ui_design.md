@@ -449,6 +449,8 @@ Training Studio:
 - Advanced mode with expandable options for feature set, label policy, split policy, CV, calibration, and thresholds
 - One-click launch from preset with editable guardrails
 - Training run timeline with queue state, duration estimate, and resource profile
+- Outcome snapshot cards must include percentage-based quality interpretation (for example: estimated success likelihood, accuracy, capture rate, coverage, calibration alignment, and robustness).
+- Outcome area must include a prominent overall effectiveness percentage in large typography for fast operator triage, with supporting metric percentages below it.
 - Visual diagnostics: confusion matrix, ROC/PR, feature importance, calibration curve, reliability bins, and drift deltas
 - Wizard completion state must provide direct navigation shortcuts to diagnostics and training timeline evidence.
 - Run comparison workspace with side-by-side metrics and threshold simulations
@@ -710,3 +712,4 @@ Phase F:
 16. Advanced training mode remains discoverable, grouped, and fully keyboard accessible.
 17. Guided training wizard covers all runtime and training parameters with step-level validation and launch review.
 18. Wizard post-launch completion step exposes quick navigation to diagnostics and training-session timeline.
+19. Training outcome cards present percentage-based model quality interpretation and explicitly label estimated-success metrics as non-guaranteed live outcomes.

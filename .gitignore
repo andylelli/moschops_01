@@ -17,6 +17,8 @@ dist/
 build/
 coverage/
 *.tsbuildinfo
+logs/
+backend/logs/
 
 # Env files
 .env

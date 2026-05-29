@@ -1,0 +1,12 @@
+﻿{
+    "generatedAtUtc":  "2026-05-27T20:07:44.5027894Z",
+    "reason":  "No development run satisfied hard feasibility constraints; holdout run was blocked.",
+    "feasibilityRules":  {
+                             "targetMaxDrawdownPct":  -10,
+                             "targetMinMedianTrades":  80
+                         },
+    "allowFallbackSelection":  false,
+    "devRunsEvaluated":  9,
+    "feasibleDevRuns":  0,
+    "nextAction":  "Revise strategy/risk design and rerun; do not tune on holdout."
+}

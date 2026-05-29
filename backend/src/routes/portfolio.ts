@@ -27,6 +27,30 @@ const portfolioSchema = z.object({
   maxOpenTrades: z.number().default(6),
 });
 
+const portfolioSummaryQuerySchema = z.object({
+  maxOpenRisk: z.coerce.number().positive().default(0.04),
+  maxOpenTrades: z.coerce.number().int().positive().default(6),
+  lookback: z.coerce.number().int().min(20).max(1000).default(200),
+});
+
+function classifyAssetClass(symbol: string): string {
+  const normalized = symbol.toUpperCase();
+
+  if (normalized.includes("XAU") || normalized.includes("XAG")) {
+    return "Metals";
+  }
+
+  if (normalized.length === 6 && /^[A-Z]+$/.test(normalized)) {
+    return "FX";
+  }
+
+  if (normalized.includes("US") || normalized.includes("JP") || normalized.includes("DE")) {
+    return "Index";
+  }
+
+  return "Other";
+}
+
 function asPortfolioResponse(decision: {
   portfolioDecisionId: string;
   approvedPlans: string[];
@@ -46,6 +70,91 @@ function asPortfolioResponse(decision: {
 }
 
 export async function portfolioRoutes(app: FastifyInstance): Promise<void> {
+  app.get("/portfolio/summary", async (req, reply) => {
+    const parsed = portfolioSummaryQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: { code: "INVALID_REQUEST", message: parsed.error.message } });
+    }
+
+    const [latestDecision, openSnapshots, recentDecisionItems] = await Promise.all([
+      prismaClient().portfolioDecision.findFirst({
+        orderBy: { evaluatedAtUtc: "desc" },
+      }),
+      prismaClient().openTradeSnapshot.findMany({
+        orderBy: { capturedAtUtc: "desc" },
+        take: parsed.data.lookback,
+      }),
+      prismaClient().portfolioDecisionItem.findMany({
+        where: { approved: false },
+        orderBy: { createdAt: "desc" },
+        take: parsed.data.lookback,
+      }),
+    ]);
+
+    const symbolCounts = new Map<string, number>();
+    for (const snapshot of openSnapshots) {
+      const symbol = (snapshot.symbol ?? "UNKNOWN").toUpperCase();
+      symbolCounts.set(symbol, (symbolCounts.get(symbol) ?? 0) + 1);
+    }
+
+    const totalExposureRows = Array.from(symbolCounts.values()).reduce((sum, count) => sum + count, 0);
+    const exposureBySymbol = Array.from(symbolCounts.entries())
+      .map(([symbol, count]) => ({
+        symbol,
+        count,
+        sharePct: totalExposureRows > 0 ? (count / totalExposureRows) * 100 : 0,
+        assetClass: classifyAssetClass(symbol),
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    const vetoCounts = new Map<string, number>();
+    for (const item of recentDecisionItems) {
+      for (const reasonCode of item.reasonCodes) {
+        vetoCounts.set(reasonCode, (vetoCounts.get(reasonCode) ?? 0) + 1);
+      }
+    }
+
+    const vetoBreakdownTop = Array.from(vetoCounts.entries())
+      .map(([reasonCode, count]) => ({ reasonCode, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    const correlationFlags = vetoBreakdownTop
+      .filter((item) => item.reasonCode.toUpperCase().includes("CORRELATION"))
+      .reduce((sum, item) => sum + item.count, 0);
+
+    const totalRejected = Array.from(vetoCounts.values()).reduce((sum, count) => sum + count, 0);
+    const maxOpenRisk = parsed.data.maxOpenRisk;
+    const maxOpenTrades = parsed.data.maxOpenTrades;
+
+    const remainingRiskBudget = latestDecision?.remainingRiskBudget ?? maxOpenRisk;
+    const remainingTradeSlots = latestDecision?.remainingTradeSlots ?? maxOpenTrades;
+
+    return {
+      generatedAtUtc: new Date().toISOString(),
+      sourceDecisionId: latestDecision?.portfolioDecisionId ?? null,
+      exposureBySymbol,
+      openRiskBudget: {
+        maxOpenRisk,
+        remainingRiskBudget,
+        consumedRiskBudget: Math.max(0, maxOpenRisk - remainingRiskBudget),
+        consumedPct: maxOpenRisk > 0 ? Math.min(100, Math.max(0, ((maxOpenRisk - remainingRiskBudget) / maxOpenRisk) * 100)) : 0,
+      },
+      tradeSlots: {
+        maxOpenTrades,
+        remainingTradeSlots,
+        consumedTradeSlots: Math.max(0, maxOpenTrades - remainingTradeSlots),
+        consumedPct: maxOpenTrades > 0 ? Math.min(100, Math.max(0, ((maxOpenTrades - remainingTradeSlots) / maxOpenTrades) * 100)) : 0,
+      },
+      vetoBreakdownTop,
+      correlationConcentration: {
+        flaggedCount: correlationFlags,
+        totalRejected,
+        ratioPct: totalRejected > 0 ? (correlationFlags / totalRejected) * 100 : 0,
+      },
+    };
+  });
+
   app.post("/portfolio/evaluate", async (req, reply) => {
     const parsed = portfolioSchema.safeParse(req.body);
     if (!parsed.success) {

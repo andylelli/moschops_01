@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { prismaClient } from "../services/prisma";
+import { recordFileLog } from "../services/file-log";
 
 const logSignalSchema = z.object({
   decisionId: z.string(),
@@ -78,6 +79,22 @@ export async function loggingRoutes(app: FastifyInstance): Promise<void> {
       },
     });
 
+    recordFileLog({
+      category: "audit",
+      level: "info",
+      event: "signal_logged",
+      message: "Signal decision persisted",
+      context: {
+        decisionId: payload.decisionId,
+        signalId: payload.signalId,
+        strategyId: payload.strategyId,
+        strategyVersion: payload.strategyVersion,
+        symbol: payload.symbol,
+        timeframe: payload.timeframe,
+        action: payload.action,
+      },
+    });
+
     return { ok: true };
   });
 
@@ -97,6 +114,22 @@ export async function loggingRoutes(app: FastifyInstance): Promise<void> {
         timeframe: parsed.data.timeframe,
         reasonCode: parsed.data.reasonCode,
         detailsJson: parsed.data.payload ?? {},
+      },
+    });
+
+    recordFileLog({
+      category: "audit",
+      level: "info",
+      event: "rejected_signal_logged",
+      message: "Rejected signal persisted",
+      context: {
+        decisionId: parsed.data.decisionId,
+        signalId: parsed.data.signalId ?? null,
+        strategyId: parsed.data.strategyId,
+        strategyVersion: parsed.data.strategyVersion,
+        symbol: parsed.data.symbol,
+        timeframe: parsed.data.timeframe,
+        reasonCode: parsed.data.reasonCode,
       },
     });
 
@@ -120,6 +153,23 @@ export async function loggingRoutes(app: FastifyInstance): Promise<void> {
         swap: parsed.data.swap,
       },
       create: parsed.data,
+    });
+
+    recordFileLog({
+      category: "audit",
+      level: "info",
+      event: "trade_logged",
+      message: "Trade persisted",
+      context: {
+        tradeId: parsed.data.tradeId,
+        decisionId: parsed.data.decisionId ?? null,
+        signalId: parsed.data.signalId ?? null,
+        strategyId: parsed.data.strategyId,
+        strategyVersion: parsed.data.strategyVersion,
+        symbol: parsed.data.symbol,
+        side: parsed.data.side,
+        status: parsed.data.status,
+      },
     });
 
     return { ok: true };

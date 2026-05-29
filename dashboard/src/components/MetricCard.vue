@@ -1,9 +1,23 @@
-<script setup lang="ts">
-defineProps<{
-  label: string
-  value: string
-  subtitle?: string
-}>()
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'MetricCard',
+  props: {
+    label: {
+      type: String,
+      required: true,
+    },
+    value: {
+      type: String,
+      required: true,
+    },
+    subtitle: {
+      type: String,
+      default: '',
+    },
+  },
+})
 </script>
 
 <template>

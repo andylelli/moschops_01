@@ -1,0 +1,54 @@
+{
+  "generatedAtUtc": "2026-05-27T18:54:41.658857+00:00",
+  "baseUrl": "http://127.0.0.1:3000",
+  "source": "FMP",
+  "symbol": "EURUSD",
+  "timeframe": "D1",
+  "trainWindow": {
+    "start": "2014-05-27",
+    "end": "2024-05-27"
+  },
+  "testWindow": {
+    "start": "2024-05-28",
+    "end": "2026-05-27"
+  },
+  "horizonBars": 5,
+  "downloadJob": {
+    "id": "cmpofbbxg174wk0s5nx11xrav",
+    "status": "COMPLETED",
+    "source": "FMP",
+    "symbol": "EURUSD",
+    "timeframe": "D1",
+    "fromDate": "2014-05-27T00:00:00.000Z",
+    "toDate": "2026-05-27T23:59:59.999Z",
+    "barsFetched": 3176,
+    "barsInserted": 0,
+    "barsSkipped": 3176,
+    "requestedAtUtc": "2026-05-27T18:54:39.648Z",
+    "completedAtUtc": "2026-05-27T18:54:41.210Z"
+  },
+  "bars": {
+    "trainFetched": 2597,
+    "testFetched": 579,
+    "trainFeatureRows": 2393,
+    "testFeatureRows": 375
+  },
+  "metrics": {
+    "auc": 0.582934472934473,
+    "accuracy": 0.5706666666666667,
+    "precision": 0.6770833333333334,
+    "recall": 0.3333333333333333,
+    "brier": 0.24799809702889183,
+    "testPositiveRate": 0.52,
+    "predictedPositiveRate": 0.256
+  },
+  "strategyBacktest": {
+    "totalTrades": 96,
+    "winRate": 0.6770833333333334,
+    "netReturnPct": 26.973973318558443,
+    "profitFactor": 2.432018137541909,
+    "maxDrawdownPct": -6.663980511997503,
+    "sharpeApprox": 2.6126494861104996
+  },
+  "modelPath": "C:\\moschops_01\\docs\\09-training-runs\\runs\\2026-05-27_19-43-historical-10y-2y\\artifacts\\historical_split_model.onnx"
+}

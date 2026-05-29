@@ -5,6 +5,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { prismaClient } from "../services/prisma";
 import { env } from "../utils/env";
+import { recordFileLog } from "../services/file-log";
 
 interface TrainingReport {
   generatedAtUtc?: string;
@@ -303,6 +304,13 @@ async function getTrainingRuntimeHealth(app: FastifyInstance): Promise<TrainingR
   }
 
   app.log.warn({ configuredExecutable, errors }, "training runtime preflight failed to locate usable python interpreter");
+  recordFileLog({
+    category: "training",
+    level: "warn",
+    event: "training_runtime_preflight_failed",
+    message: "training runtime preflight failed to locate usable python interpreter",
+    context: { configuredExecutable, errors },
+  });
 
   return {
     ok: false,
@@ -374,6 +382,13 @@ async function executeTrainingScript(payload: LaunchTrainingPayload, trainingRun
         },
         "launching training script",
       );
+      recordFileLog({
+        category: "training",
+        level: "info",
+        event: "training_script_starting",
+        message: "launching training script",
+        context: { trainingRunId, command: candidate.command, args: commandArgs },
+      });
 
       const result = await runCommand(candidate.command, commandArgs, timeoutMs);
       const durationSeconds = Number(((Date.now() - startedAt) / 1000).toFixed(2));
@@ -382,6 +397,13 @@ async function executeTrainingScript(payload: LaunchTrainingPayload, trainingRun
 
       if (result.exitCode === 0) {
         app.log.info({ trainingRunId, durationSeconds, model: modelName }, "training script completed");
+        recordFileLog({
+          category: "training",
+          level: "info",
+          event: "training_script_completed",
+          message: "training script completed",
+          context: { trainingRunId, durationSeconds, model: modelName },
+        });
         return {
           stdoutTail,
           stderrTail,
@@ -396,11 +418,25 @@ async function executeTrainingScript(payload: LaunchTrainingPayload, trainingRun
       );
       lastError = failure;
       app.log.error({ trainingRunId, exitCode: result.exitCode, stderrTail, stdoutTail }, "training script failed");
+      recordFileLog({
+        category: "training",
+        level: "error",
+        event: "training_script_failed",
+        message: "training script failed",
+        context: { trainingRunId, exitCode: result.exitCode, stderrTail, stdoutTail },
+      });
       break;
     } catch (error) {
       const maybeErrno = error as NodeJS.ErrnoException;
       if (maybeErrno.code === "ENOENT") {
         app.log.warn({ trainingRunId, command: candidate.command }, "python executable candidate not found");
+        recordFileLog({
+          category: "training",
+          level: "warn",
+          event: "training_python_candidate_missing",
+          message: "python executable candidate not found",
+          context: { trainingRunId, command: candidate.command },
+        });
         lastError = new Error(`Python executable not found: ${candidate.command}`);
         continue;
       }
@@ -739,6 +775,13 @@ export async function trainingRoutes(app: FastifyInstance): Promise<void> {
       });
 
       app.log.error({ trainingRunId, error: failureMessage }, "training run failed");
+      recordFileLog({
+        category: "training",
+        level: "error",
+        event: "training_run_failed",
+        message: "training run failed",
+        context: { trainingRunId, error: failureMessage },
+      });
       return reply.status(500).send({
         error: {
           code: "TRAINING_RUN_FAILED",

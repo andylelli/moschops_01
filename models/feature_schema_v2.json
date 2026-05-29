@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "v2",
+  "description": "P1 feature set — 23 technical and statistical indicator features for OHLCV bar data.",
+  "features": [
+    "rsi",
+    "macd_line",
+    "macd_signal",
+    "macd_hist",
+    "bb_width",
+    "bb_pct_b",
+    "adx",
+    "adx_plus_di",
+    "adx_minus_di",
+    "squeeze_on",
+    "squeeze_momentum",
+    "supertrend_dir",
+    "kama_slope",
+    "lr_slope",
+    "lr_r2",
+    "volume_ratio",
+    "volume_momentum",
+    "day_of_week",
+    "is_monday",
+    "is_friday",
+    "hurst",
+    "cusum",
+    "efficiency_ratio"
+  ],
+  "minimumBarsRequired": 65,
+  "implementations": {
+    "python": "training/features.py — build_feature_set() / P1_FEATURE_NAMES",
+    "typescript": "backend/src/utils/indicators.ts — computeP1Features() / P1_FEATURE_NAMES"
+  },
+  "notes": [
+    "v2 supersedes v1 (feature_schema_v1.json) for the P1 model family.",
+    "v1 (5 synthetic features) is retained for the current production model.",
+    "Both Python and TypeScript implementations use identical formulas to avoid training-inference skew.",
+    "Minimum 65 bars required so all warmup windows (Hurst=60, MACD slow=26, KAMA window=10+5) are satisfied with margin.",
+    "Day-of-week features use UTC date from barCloseTimeUtc; Monday=0, Friday=4."
+  ]
+}

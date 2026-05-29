@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import VChart from 'vue-echarts'
 import PageHeader from '../components/PageHeader.vue'
 import { apiGet } from '../api'
+import PlotlyPanel from '../components/PlotlyPanel.vue'
 
 type ModelVersionResponse = {
   strategyId: string
@@ -75,6 +76,14 @@ function asNumber(value: unknown): number | null {
   return null
 }
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return null
+  }
+
+  return value as Record<string, unknown>
+}
+
 function getRunOutcomeMetric(run: TrainingRun, key: string): number | null {
   const metricsJson = run.metricsJson
   if (!metricsJson || typeof metricsJson !== 'object') {
@@ -93,6 +102,91 @@ const calibrationDrift = computed(() => {
   const drift = asNumber(latestOutcome.value?.calibrationDrift)
   return drift === null ? null : drift
 })
+
+const latestDiagnostics = computed(() => {
+  const metricsJson = latestCompletedRun.value?.metricsJson
+  const root = asRecord(metricsJson)
+  const diagnostics = asRecord(root?.diagnostics)
+  if (!diagnostics) {
+    return null
+  }
+
+  return diagnostics
+})
+
+const rocPlotData = computed(() => {
+  const rocCurve = latestDiagnostics.value?.rocCurve
+  if (!Array.isArray(rocCurve) || rocCurve.length === 0) {
+    return [] as unknown[]
+  }
+
+  const points = rocCurve
+    .map((item) => {
+      const row = asRecord(item)
+      return {
+        fpr: asNumber(row?.fpr),
+        tpr: asNumber(row?.tpr),
+        threshold: asNumber(row?.threshold),
+      }
+    })
+    .filter((item) => item.fpr !== null && item.tpr !== null)
+
+  if (points.length === 0) {
+    return [] as unknown[]
+  }
+
+  return [
+    {
+      type: 'scatter',
+      mode: 'lines+markers',
+      name: 'ROC',
+      x: points.map((item) => item.fpr),
+      y: points.map((item) => item.tpr),
+      text: points.map((item) => `threshold ${item.threshold ?? 'N/A'}`),
+      hovertemplate: 'FPR %{x:.3f}<br>TPR %{y:.3f}<br>%{text}<extra></extra>',
+    },
+  ]
+})
+
+const prPlotData = computed(() => {
+  const prCurve = latestDiagnostics.value?.prCurve
+  if (!Array.isArray(prCurve) || prCurve.length === 0) {
+    return [] as unknown[]
+  }
+
+  const points = prCurve
+    .map((item) => {
+      const row = asRecord(item)
+      return {
+        recall: asNumber(row?.recall),
+        precision: asNumber(row?.precision),
+        threshold: asNumber(row?.threshold),
+      }
+    })
+    .filter((item) => item.recall !== null && item.precision !== null)
+
+  if (points.length === 0) {
+    return [] as unknown[]
+  }
+
+  return [
+    {
+      type: 'scatter',
+      mode: 'lines+markers',
+      name: 'Precision-Recall',
+      x: points.map((item) => item.recall),
+      y: points.map((item) => item.precision),
+      text: points.map((item) => `threshold ${item.threshold ?? 'N/A'}`),
+      hovertemplate: 'Recall %{x:.3f}<br>Precision %{y:.3f}<br>%{text}<extra></extra>',
+    },
+  ]
+})
+
+const diagnosticsLayout = {
+  margin: { l: 40, r: 14, t: 20, b: 40 },
+  xaxis: { title: { text: 'False positive / Recall' } },
+  yaxis: { title: { text: 'True positive / Precision' } },
+}
 
 const promotionCandidate = computed(() => {
   if (!latestCompletedRun.value?.modelVersion) {
@@ -226,6 +320,32 @@ onMounted(async () => {
       </div>
     </section>
 
+    <div class="grid gap-4 lg:grid-cols-2">
+      <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 shadow-sm">
+        <h2 class="mb-2 text-sm font-semibold">ROC Curve (Interactive)</h2>
+        <PlotlyPanel
+          :data="rocPlotData"
+          :layout="diagnosticsLayout"
+          :loading="loading"
+          :error="errorMessage"
+          empty-message="No ROC diagnostics available in the latest completed training run."
+          height-class="h-72"
+        />
+      </section>
+
+      <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 shadow-sm">
+        <h2 class="mb-2 text-sm font-semibold">Precision-Recall Curve (Interactive)</h2>
+        <PlotlyPanel
+          :data="prPlotData"
+          :layout="diagnosticsLayout"
+          :loading="loading"
+          :error="errorMessage"
+          empty-message="No precision-recall diagnostics available in the latest completed training run."
+          height-class="h-72"
+        />
+      </section>
+    </div>
+
     <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 shadow-sm">
       <h2 class="mb-2 text-sm font-semibold">Recent Training Sessions</h2>
       <div class="max-h-72 overflow-auto">
@@ -262,6 +382,8 @@ onMounted(async () => {
       class="fixed inset-0 z-40 flex items-center justify-center bg-black/50 p-4"
       role="dialog"
       aria-modal="true"
+      tabindex="-1"
+      @keydown.esc="showNarrative = false"
     >
       <article class="max-h-[80vh] w-full max-w-2xl overflow-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 shadow-xl">
         <div class="mb-3 flex items-center justify-between gap-3">

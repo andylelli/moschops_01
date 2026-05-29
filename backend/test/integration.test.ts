@@ -3,6 +3,9 @@ import type { FastifyInstance } from "fastify";
 import { buildApp } from "../src/app";
 import { prismaClient } from "../src/services/prisma";
 
+const runDbTests = process.env.RUN_DB_TESTS === "true";
+const integrationDescribe = runDbTests ? describe : describe.skip;
+
 function uniqueId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -42,7 +45,7 @@ function buildSignalPayload(decisionId: string, symbol = "EURUSD") {
   };
 }
 
-describe("Phase 3 - Persistence & Audit Logging Integration Tests", () => {
+integrationDescribe("Phase 3 - Persistence & Audit Logging Integration Tests", () => {
   let app: FastifyInstance;
 
   beforeAll(async () => {
@@ -116,9 +119,9 @@ describe("Phase 3 - Persistence & Audit Logging Integration Tests", () => {
     const body = response.json();
     expect(body.status).toBe("ok");
     expect(body.telemetry.backend).toBe("up");
-    expect(body.telemetry.newsProvider).toBe("FMP");
-    expect(body.telemetry.newsProviderTier).toBe("FREE");
-    expect(["FRESH", "DEGRADED", "STALE", "DOWN"]).toContain(body.telemetry.newsFreshness);
+    expect(body.telemetry.newsProvider.provider).toBe("FMP");
+    expect(body.telemetry.newsProvider.tier).toBe("FREE");
+    expect(["FRESH", "DEGRADED", "STALE", "DOWN"]).toContain(body.telemetry.newsProvider.freshnessState);
   });
 
   test("news endpoints return normalized contract shells", async () => {

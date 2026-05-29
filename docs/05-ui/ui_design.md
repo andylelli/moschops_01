@@ -1,12 +1,12 @@
 # AI Trading System UI Design Specification
 
 Version: 1.2
-Last updated: 2026-05-22
+Last updated: 2026-05-26
 Status: Active design blueprint for implementation
 
 ## UI Implementation Progress Tracker
 
-Last verified: 2026-05-22
+Last verified: 2026-05-26
 
 Status legend:
 - Not started
@@ -18,29 +18,29 @@ Status legend:
 
 | Metric | Value | Notes |
 |---|---|---|
-| Estimated overall implementation completion | 54% | Based on tracker rows below and current dashboard evidence |
-| Active blockers | 1 | Provider entitlement constraints may limit some data-rich UI validation flows |
-| Highest-priority open areas | Full API contract binding, training/admin diagnostic depth, visualization stack completion | Needed to satisfy sections 10-12, 14.1, and 19 |
+| Estimated overall implementation completion | 88% | Based on live contract binding completion across all top-level views, visualization stack integration, and build/test evidence |
+| Active blockers | 0 | No implementation blocker; remaining work is formal QA evidence capture and sign-off packaging |
+| Highest-priority open areas | Formal WCAG benchmark artifact capture, mobile performance benchmark evidence, final checklist sign-off packet | Needed to close sections 13, 17, and 19 evidence rigor |
 
 ### Section-by-Section Tracker
 
 | Track ID | Spec section(s) | Scope | Status | Completion | Evidence / Notes |
 |---|---|---|---|---:|---|
-| UI-01 | 1, 2, 3, 4 | Product intent, IA, and top-level navigation model | In progress | 82 | Full top-level route set is wired; shell now exposes role chip, environment/strategy/date/profile context controls, and global risk-first header surfaces |
-| UI-02 | 5, 5.1 | Visual system, iconography, and polish standards | In progress | 45 | Tokenized theme base exists; Font Awesome integration and icon registry rollout still pending |
-| UI-03 | 6, 7 | Typography, spacing, and light/dark token behavior | In progress | 70 | Typography and token variables are implemented; full quality-pass spacing conformance pending |
-| UI-04 | 8 | Layout patterns and grid behavior | In progress | 74 | Global shell, responsive nav, alert rail, and persistent kill-switch banner patterns are now implemented; panel preset consistency still pending |
-| UI-05 | 9, 9.1, 9.2, 9.3, 9.4, 9.5 | Core component library and behavior contracts | In progress | 46 | `DataPanel`, `MetricCard`, `StatusBadge`, `KillSwitchBanner`, `AlertRail`, `RoleGuard`, and `TradeLedgerTable` are implemented; additional component contract coverage remains |
-| UI-06 | 10 | View-by-view design coverage | In progress | 52 | All top-level views are implemented; training/admin/risk/trades pages now include stronger interaction and control scaffolding, but several panels still use placeholder datasets |
-| UI-07 | 11, 11.1 | Visualization standards and graph tooling | Not started | 10 | Required chart stack and rich model/admin visual diagnostics are not yet integrated |
-| UI-08 | 12, 12.1 | Interaction and micro-interaction quality | In progress | 50 | Admin privileged actions now use explicit two-step confirmation with reason capture; deterministic motion and advanced training interaction quality pass still pending |
-| UI-09 | 13 | Accessibility and UX safety | In progress | 48 | Focus-visible styling, role-aware action gating, and text-labeled status badges are present; full WCAG validation and complete keyboard pass remain |
-| UI-10 | 14, 14.1 | Frontend architecture and data contract ownership | In progress | 50 | Vue/Pinia/router baseline exists; full route/state domain coverage and contract checks pending |
-| UI-11 | 15 | Responsive behavior and mobile safety | In progress | 62 | Mobile navigation plus table-to-card transform is now implemented in trade ledger surfaces; compact chart/diagnostic modes still pending |
-| UI-12 | 16 | Content and terminology consistency | In progress | 45 | Reason-code oriented copy is present in some views; full canonical terminology pass pending |
-| UI-13 | 17 | Non-functional UI requirements | Not started | 15 | Performance and reliability targets defined but not yet formally measured |
-| UI-14 | 18 | Build plan execution | In progress | 42 | Phase A-C are substantially implemented and parts of Phase E/F have started via training/admin action flows and accessibility hardening |
-| UI-15 | 19 | Design QA checklist completion | In progress | 18 | Items covering theme persistence, risk visibility, icon semantics, and part of mobile table behavior now have implementation evidence; formal QA evidence is still open |
+| UI-01 | 1, 2, 3, 4 | Product intent, IA, and top-level navigation model | In progress | 86 | Full top-level route set is wired; shell now exposes role, environment, strategy, date/profile context controls, plus global risk-first header and provider telemetry surface |
+| UI-02 | 5, 5.1 | Visual system, iconography, and polish standards | In progress | 70 | Tokenized theme base and centralized Font Awesome icon registry are implemented; icon consistency QA pass remains |
+| UI-03 | 6, 7 | Typography, spacing, and light/dark token behavior | In progress | 74 | Typography and token variables are implemented; table row-height and spacing conformance audit remains |
+| UI-04 | 8 | Layout patterns and grid behavior | In progress | 78 | Global shell, responsive nav, alert rail, and persistent kill-switch banner patterns are implemented; panel preset consistency remains open |
+| UI-05 | 9, 9.1, 9.2, 9.3, 9.4, 9.5 | Core component library and behavior contracts | In progress | 84 | Shared component contracts now include live Plotly/Cytoscape wrappers, stale/retry handling patterns, and persisted settings behavior; final cross-view polish pass remains |
+| UI-06 | 10 | View-by-view design coverage | In progress | 92 | Overview, Portfolio, Trades, AI, Training, Risk, System, Incidents, Admin, and Settings are now live-bound to backend contracts (including incidents timeline/acknowledgements and portfolio summary) |
+| UI-07 | 11, 11.1 | Visualization standards and graph tooling | In progress | 90 | ECharts baseline remains, and high-interaction Plotly (ROC/PR) plus Cytoscape (incident-runbook dependencies) layers are implemented with fallback messaging |
+| UI-08 | 12, 12.1 | Interaction and micro-interaction quality | In progress | 58 | Admin privileged actions use explicit two-step confirmation with reason capture; guided training wizard implements step validation and completion shortcuts |
+| UI-09 | 13 | Accessibility and UX safety | In progress | 82 | Skip-link navigation, reduced-motion fallback, keyboard-safe incident selection, and modal Escape handling were added; formal WCAG artifact package remains |
+| UI-10 | 14, 14.1 | Frontend architecture and data contract ownership | In progress | 88 | Route-level role guard, expanded state persistence domains, and new incident/portfolio contract ownership are implemented; typed-domain consolidation can be further tightened |
+| UI-11 | 15 | Responsive behavior and mobile safety | In progress | 68 | Mobile navigation and table-to-card transform are implemented in trade ledger surfaces; compact chart mode and measured mobile performance targets remain |
+| UI-12 | 16 | Content and terminology consistency | In progress | 48 | Reason-code oriented copy is present in key views; full canonical terminology pass remains |
+| UI-13 | 17 | Non-functional UI requirements | In progress | 78 | Reliability behaviors (stale state, retry paths, graceful fallback panels) are implemented across core views; benchmark evidence tracked in `docs/07-temp/ui_qa_evidence_2026-05-26.md` |
+| UI-14 | 18 | Build plan execution | In progress | 90 | Phases A-E are implemented with live contracts and interactive diagnostics; Phase F evidence-pack and sign-off remains |
+| UI-15 | 19 | Design QA checklist completion | In progress | 80 | Checklist implementation coverage is largely complete, including icon semantics, role gating, and diagnostics surfaces; sign-off evidence anchored in `docs/07-temp/ui_qa_evidence_2026-05-26.md` |
 
 ## Contents
 - [UI Implementation Progress Tracker](#ui-implementation-progress-tracker)

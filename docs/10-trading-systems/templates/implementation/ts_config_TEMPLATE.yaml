@@ -1,0 +1,180 @@
+# TS Implementation Config Template
+# Copy this file to docs/10-trading-systems/TS-00n/implementation/config.yaml
+# Fill in every field from the signed-off recipe (docs/10-trading-systems/recipes/nn-recipe-ts-00n.md)
+# Do NOT leave any field as null before running experiments.
+
+# ── Identity ──────────────────────────────────────────────────────────────────
+system_id: "TS-00n"          # e.g. TS-004
+name: ""                     # Human-readable name, e.g. "Event-Aware Trend Continuation"
+version: "1.0"
+recipe: ""                   # Relative path to signed-off recipe, e.g. ../recipes/04-recipe-ts-004.md
+created: ""                  # ISO date, e.g. 2026-05-28
+
+# ── Market ────────────────────────────────────────────────────────────────────
+symbol: ""                   # e.g. EURUSD
+timeframe: ""                # e.g. H4 | D1 | H1
+
+# ── Label ─────────────────────────────────────────────────────────────────────
+label:
+  mode: ""                   # direction | edge
+  min_edge_bps: null         # Required when mode=edge. e.g. 8
+  horizon: null              # Forward bars. e.g. 10
+  class_weight: "balanced"   # balanced | none
+
+# ── Model ─────────────────────────────────────────────────────────────────────
+model:
+  estimator: ""              # xgb | lgbm | logistic
+  calibration: ""            # isotonic | platt | none
+  hyperparams:               # Defaults — override per experiment
+    n_estimators: 200
+    max_depth: 4
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_alpha: 0.1
+    reg_lambda: 1.0
+    random_state: 42
+
+# ── Features ──────────────────────────────────────────────────────────────────
+features:
+  set: ""                    # default | p1_extended | custom
+  # List any additions or exclusions from the base set:
+  include: []                # e.g. [bocpd_cp_prob, ichimoku_cloud_bullish]
+  exclude: []                # Features to drop from the base set
+
+# ── Regime Gate ───────────────────────────────────────────────────────────────
+regime_gate:
+  enabled: true
+  metric: ""                 # e.g. volatility_regime
+  min: null                  # Lower bound. e.g. 0.80
+  max: null                  # Upper bound. e.g. 2.00
+  action: "block-all"        # block-all | reduce-size | log-only
+
+# ── Signal Variant ────────────────────────────────────────────────────────────
+signal:
+  variant: ""                # trend-follow | mean-reversion | neutral
+  trend_sma_window: null     # Required when variant=trend-follow. e.g. 200
+  min_trend_strength: null   # Required when variant=trend-follow. e.g. 0.30
+
+# ── Threshold ─────────────────────────────────────────────────────────────────
+threshold:
+  method: ""                 # constrained-optimisation | median | fixed
+  probability_floor: null    # Hard minimum. e.g. 0.52
+  min_trades: null           # Constraint for constrained-optimisation. e.g. 60
+  max_dd: null               # Constraint for constrained-optimisation. e.g. 0.20
+
+# ── Walk-Forward CV ───────────────────────────────────────────────────────────
+cv:
+  folds: null                # e.g. 5
+  window: ""                 # expanding | rolling
+  embargo_bars: null         # e.g. 5
+  horizon_bars: null         # Bars per test fold. e.g. 8
+
+# ── Training Windows ──────────────────────────────────────────────────────────
+windows:
+  train_start: ""            # ISO date. e.g. "2012-01-01"
+  dev_split: ""              # Train/dev boundary. e.g. "2022-01-01"
+  holdout_start: ""          # e.g. "2023-01-01"
+  holdout_end: ""            # e.g. "2024-12-31"
+
+# ── Cost Model ────────────────────────────────────────────────────────────────
+costs:
+  spread_bps: null           # e.g. 2.5
+  commission_bps: null       # e.g. 1.0
+  slippage_bps: null         # e.g. 0.5
+  overnight_bps_per_night: null  # e.g. 0.5
+  stress:
+    spread_mult: 2.0         # Stress spread multiplier
+    slippage_mult: 3.0       # Stress slippage multiplier
+
+# ── Promotion Gate Thresholds ─────────────────────────────────────────────────
+gates:
+  min_trades: null           # Minimum holdout trades. e.g. 60
+  min_pf: null               # Profit factor floor. e.g. 1.25
+  max_dd: null               # Max drawdown ceiling (fraction). e.g. 0.20
+  min_expectancy_bps: null   # Expectancy floor after costs. e.g. 5
+  min_fold_consistency: null # Fraction of folds profitable. e.g. 0.60
+  min_auc: null              # OOS AUC floor. e.g. 0.53
+  max_brier: null            # Brier score ceiling. e.g. 0.25
+  max_pbo: null              # PBO ceiling. e.g. 0.40
+
+# ── Data Source ──────────────────────────────────────────────────────────────
+data:
+  provider: ""               # fmp | csv | other
+  endpoint: ""               # Full API URL for the symbol + timeframe
+  api_key_env: ""            # Environment variable name holding the API key (never store key here)
+  n_bars: null               # Total bars to fetch; must cover train_start to holdout_end with margin
+  cache_path: ""             # e.g. docs/09-training-runs/data/{SYMBOL}_{TIMEFRAME}.csv
+  backend_url: ""            # e.g. http://localhost:3000
+
+# ── Training ──────────────────────────────────────────────────────────────────
+training:
+  script: ""                 # e.g. training/run_historical_split.py
+  scaler: ""                 # standard | minmax | none
+  random_seed: null          # Global seed for data shuffle and model. e.g. 42
+  onnx_export:
+    enabled: true
+    opset: 15                # Pin opset for reproducibility
+    output_path: ""          # e.g. models/{model_name}.onnx
+  scaler_output_path: ""     # e.g. models/scaler_{model_name}.pkl
+
+# ── Validation ────────────────────────────────────────────────────────────────
+validation:
+  mc_simulation:
+    enabled: true            # Recommend enabling from EXP-004 onwards
+    n_paths: 1000
+    confidence: 0.95
+    annualisation: null      # bars_per_year for Sharpe; e.g. 1521 for H4, 252 for D1
+    seed: null               # e.g. 42
+  pbo:
+    enabled: true            # Recommend enabling from EXP-004 onwards
+  shadow_trader:
+    enabled: true            # Recommend enabling from EXP-001 onwards
+    threshold: null          # Signal probability threshold for shadow log. e.g. 0.62
+    output_dir: ""           # e.g. docs/09-training-runs/shadow/{system_id}
+
+# ── Live ──────────────────────────────────────────────────────────────────────
+live:
+  circuit_breaker:
+    max_daily_loss_pct: null      # e.g. 0.015  (1.5%)
+    max_drawdown_pct: null        # e.g. 0.15   (15%)
+    max_consecutive_losses: null  # e.g. 4
+    cooldown_bars: null           # e.g. 20
+  ea:
+    stop_atr_multiple: null       # e.g. 1.5
+    max_spread_pips: null         # e.g. 2.5  — skip entry if spread exceeds this
+    max_lot_size: null            # Hard ceiling regardless of Kelly. e.g. 0.10
+    min_lot_size: null            # e.g. 0.01
+    session_filter: false         # true | false — set true to add time-of-day filter
+  retrain:
+    interval_days: null           # Days between scheduled retrain checks. e.g. 7
+    min_new_bars: null            # Minimum new bars before retrain is triggered. e.g. 500
+    gate_auc_min: null            # New model must meet this AUC to promote. e.g. 0.52
+    gate_brier_max: null          # New model must meet this Brier score. e.g. 0.25
+    promote_if_better: true       # Only promote if new model beats current
+  monitoring:
+    metrics_prefix: ""            # Prometheus metric prefix. e.g. ts004
+    alert_latency_ms: null        # Alert if P95 latency exceeds this. e.g. 300
+    alert_no_signal_days: null    # Alert if no signals for N days. e.g. 3
+    signal_dist_shift_threshold: null  # Alert if signal prob distribution shifts by this fraction. e.g. 0.10
+
+# ── Experiment Plan ───────────────────────────────────────────────────────────
+# List experiments in order. Each must match an entry in 11_experiment_log.md.
+# overrides: structured field diffs applied on top of the base config above.
+# A runner applies base config first, then merges overrides for the target experiment.
+experiments:
+  - id: "EXP-001"
+    description: ""
+    phase: "dev"             # dev | holdout
+    overrides: {}            # Diffs from base config, e.g.:
+                             #   regime_gate:
+                             #     enabled: false
+                             #   features:
+                             #     set: "default"
+  # Add more experiments as needed.
+  # HOLDOUT must be last and have overrides: {} (no changes from locked dev config)
+
+# ── Output ────────────────────────────────────────────────────────────────────
+output:
+  runs_dir: "docs/09-training-runs/runs"   # Root for run artefacts
+  model_name: ""             # e.g. ts004_v1   → produces models/ts004_v1.onnx

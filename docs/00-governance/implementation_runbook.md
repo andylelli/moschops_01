@@ -1,7 +1,7 @@
 # Full Implementation Runbook and Progress Tracker
 
 Version: 1.0
-Last updated: 2026-05-24
+Last updated: 2026-05-26
 Owner: Tech Lead
 Status: Active
 
@@ -74,6 +74,27 @@ Progress note (2026-05-24 user-guide increment):
 Progress note (2026-05-24 user-guide-how-to expansion):
 - Expanded user guide with comprehensive task-based How-To playbooks spanning startup, runtime health, dashboard operation, AI training, diagnostics interpretation, incident response, admin changes, and safe shutdown.
 
+Progress note (2026-05-26 ui-contract-component increment):
+- Added reusable UI contract components for context controls and status surfaces (`ThemeToggle`, `EnvironmentSwitcher`, `StrategyFilter`, `DateRangePicker`, `IconActionButton`, `IconLabel`, `DeltaPill`, `HealthTile`).
+- Wired app shell context controls and provider telemetry to reusable components and upgraded overview/system-health panels to use the expanded component library.
+- Revalidated dashboard build (`npm run build`) after component integration and tracker updates.
+
+Progress note (2026-05-26 admin-contract-binding increment):
+- Added backend admin control-plane routes for approval lifecycle, audit log retrieval, config snapshot retrieval, and rollback execution.
+- Replaced Admin dashboard scaffold data with live API bindings for submit/approve/reject approvals, audit explorer hydration, provider entitlement board, and rollback controls.
+- Updated API contract and UI tracker docs to reflect new admin endpoint coverage and view-level data binding status.
+
+Progress note (2026-05-26 ui-live-binding-hardening increment):
+- Added backend `GET /portfolio/summary`, `GET /incidents`, and `POST /incidents/:incidentId/acknowledge` contracts with DB-backed aggregation and auditable acknowledgement persistence.
+- Replaced remaining scaffolded dashboard surfaces (Overview, Portfolio, Incidents/Runbooks, Risk summary cards, Settings persistence) with live backend binding and persisted UI preferences.
+- Added high-interaction visualization stack coverage with Plotly ROC/PR diagnostics and Cytoscape incident-to-runbook dependency graph rendering.
+- Added accessibility hardening (skip-link, reduced-motion fallback, keyboard incident selection, modal Escape dismissal) and synchronized docs/evidence references.
+- Added UI QA evidence artifact: `docs/07-temp/ui_qa_evidence_2026-05-26.md`.
+
+Progress note (2026-05-27 logging-observability increment):
+- Added filesystem logging categories under `backend/logs/` for startup, http, error, db, model, news, training, audit, and security visibility.
+- Added `docs/04-operations/logging_and_observability.md` to document the operator lookup flow and redaction rules.
+
 ## Global Phase Dashboard
 | Phase | Version target | Status | Owner | Start date | End date | Blockers |
 |---|---|---|---|---|---|---|
@@ -86,7 +107,7 @@ Progress note (2026-05-24 user-guide-how-to expansion):
 | 6 AI Pipeline and Walk-Forward Training | v1.1 | In progress |  |  |  | Data extraction/label generation and OOS superiority criterion remain unchecked |
 | 7 ONNX Inference Integration | v1.1 | In progress |  |  |  | Inference output logging, model-version wiring, and latency acceptance remain unchecked |
 | 8 Multi-Symbol Portfolio Runtime | v1.2 | In progress |  |  |  | Universe/symbol metadata tasks and simulation exit criterion remain unchecked |
-| 9 Monitoring and Dashboard | v1.3 | In progress |  |  |  | Full API contract binding remains; role-gated admin flows and mobile trade-ledger safety patterns were added in latest UI increment |
+| 9 Monitoring and Dashboard | v1.3 | In progress |  |  |  | Visual QA benchmark capture and checklist sign-off evidence consolidation remain |
 | 10 Demo and Micro-Live Rollout | v1.3 | Blocked |  |  |  | Awaiting broker/MT5 setup and demo approval |
 | 11 Multi-Strategy Runtime Integration | v2.0 | Not started |  |  |  |  |
 | 12 Shared Allocator and Model Promotion Automation | v2.0 | Not started |  |  |  |  |
@@ -334,13 +355,14 @@ Tasks:
 - [x] Add role-aware admin confirmation flow and mobile-safe table-to-card ledger presentation.
 - [x] Add narrative modal guidance and inline tooltips for advanced AI/training controls.
 - [x] Add guided training wizard flow that walks operators through all training/runtime parameters with validation, launch review, and post-launch navigation shortcuts.
+- [x] Add reusable shell/context control components and migrate app-shell controls to shared component contracts.
 
 Deliverables:
 - [x] Operator dashboard with light and dark mode (UI complete).
-- [ ] Full API data binding for live metrics.
+- [x] Full API data binding for live metrics.
 
 Exit criteria:
-- [ ] Operator can diagnose strategy, risk, model, and system status in one place.
+- [x] Operator can diagnose strategy, risk, model, and system status in one place.
 
 ## Phase 10 - Demo and Micro-Live Rollout (Target v1.3)
 Objective:

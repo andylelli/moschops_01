@@ -1,7 +1,7 @@
 # Documentation Completeness Checklist
 
 Version: 1.0
-Last updated: 2026-05-24
+Last updated: 2026-05-26
 Status: Tracking baseline
 
 ## Purpose
@@ -31,6 +31,7 @@ Track the minimum documentation set required for a production-grade, auditable t
 | DOC-12 | Documentation Governance Standard | P2 | Tech Lead | In progress | Source-of-truth mapping, PR update policy, templates, and review checklist for future docs | `documentation_governance.md` |
 | DOC-13 | News Provider Decision and LLD Integration Record | P0 | Tech Lead + Backend Lead | In progress | FMP provider decision (`FREE` for v1.x, `BASIC` for v2+) is consistent across LLD/roadmap/spec/ops docs; traceability row and runbook tracker present | `../02-architecture/lld_v1_1_news.md`, `../02-architecture/lld_v2.md`, `../06-plans/news_integration_plan.md`, `../00-governance/requirements_traceability_matrix.md` |
 | DOC-14 | End-User System Guide | P1 | Product + Ops + ML Lead | In progress | End-to-end operator instructions across setup, dashboard workflows, risk posture, and AI/training interpretation including percentage outcomes and caveats | `../08-user-guide/user_guide.md` |
+| DOC-15 | Logging and Observability Guide | P1 | Backend Lead + Platform Lead | In progress | Local file log directory layout, category purposes, redaction rules, and operator lookup flow documented | `../04-operations/logging_and_observability.md` |
 
 ## Current Core Docs (Reference)
 - `../01-roadmap/coding_plan.md`

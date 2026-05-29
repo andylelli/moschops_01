@@ -261,6 +261,19 @@ def run_backtest(df: pd.DataFrame, params: BacktestParams) -> tuple[list[TradeRe
 
 def generate_report(params: BacktestParams, stats: BacktestStats, trades: list[TradeResult]) -> str:
     """Generate markdown validation report."""
+    performance_pass = stats.profit_factor >= 1.0 and stats.expectancy > 0 and stats.net_profit > 0
+    trade_count_pass = stats.total_trades >= 10
+    risk_pass = stats.drawdown_pct <= 20.0 and stats.sharpe_ratio > 0
+    overall_pass = performance_pass and trade_count_pass and risk_pass
+
+    performance_status = "PASS" if performance_pass else "FAIL"
+    trade_count_status = "PASS" if trade_count_pass else "CHECK"
+    risk_status = "PASS" if risk_pass else "FAIL"
+
+    edge_statement = "positive" if stats.expectancy > 0 else "negative"
+    recommendation_title = "v1.0 Baseline Validated" if overall_pass else "v1.0 Baseline Not Yet Validated"
+    recommendation_mark = "PASS" if overall_pass else "HOLD"
+
     report = f"""# Baseline Backtesting Report - v1.0 Validation
 
 **Generated:** {datetime.now(timezone.utc).isoformat()}
@@ -307,7 +320,7 @@ def generate_report(params: BacktestParams, stats: BacktestStats, trades: list[T
 ### ✅ Strengths
 - Strategy generates {stats.total_trades} independent trading opportunities
 - Win rate of {stats.win_rate * 100:.1f}% with profit factor {stats.profit_factor:.2f}
-- Expectancy of ${stats.expectancy:.2f} per trade indicates positive edge
+- Expectancy of ${stats.expectancy:.2f} per trade indicates {edge_statement} edge
 - Max drawdown of {stats.drawdown_pct:.1f}% within acceptable tolerance
 - Sharpe ratio of {stats.sharpe_ratio:.2f} indicates risk-adjusted returns
 
@@ -335,17 +348,17 @@ def generate_report(params: BacktestParams, stats: BacktestStats, trades: list[T
 
 | Criterion | Status | Notes |
 |-----------|--------|-------|
-| Base strategy passes performance threshold | ✅ PASS | Profit factor {stats.profit_factor:.2f} > 1.0, positive expectancy |
+| Base strategy passes performance threshold | {performance_status} | Profit factor {stats.profit_factor:.2f}, expectancy ${stats.expectancy:.2f}, net profit ${stats.net_profit:,.2f} |
 | No look-ahead bias detected | ✅ PASS | All signals generated from bar 1+ (completed candles only) |
-| Sufficient trade count for validation | {'✅ PASS' if stats.total_trades >= 10 else '⚠️  CHECK'} | {stats.total_trades} trades {'sufficient' if stats.total_trades >= 10 else 'may be limited'} |
-| Risk metrics acceptable | ✅ PASS | Max DD {stats.drawdown_pct:.1f}%, Sharpe {stats.sharpe_ratio:.2f} |
+| Sufficient trade count for validation | {trade_count_status} | {stats.total_trades} trades {'sufficient' if trade_count_pass else 'may be limited'} |
+| Risk metrics acceptable | {risk_status} | Max DD {stats.drawdown_pct:.1f}%, Sharpe {stats.sharpe_ratio:.2f} |
 
 ## Recommendation
 
-**v1.0 Baseline Validated** ✅
+**{recommendation_title} ({recommendation_mark})**
 
 This daily breakout strategy demonstrates:
-- Consistent positive edge (profit factor > 1.0)
+- {'Consistent positive edge (profit factor >= 1.0)' if performance_pass else 'Insufficient edge under current baseline settings'}
 - Acceptable risk profile (drawdown {stats.drawdown_pct:.1f}%)
 - Sound signal generation logic (no bias)
 

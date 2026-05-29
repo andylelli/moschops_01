@@ -22,6 +22,27 @@ type ProviderResponse = {
   items: ProviderItem[]
 }
 
+type HealthResponse = {
+  telemetry: {
+    backend: string
+    database: string
+    newsProvider: {
+      freshnessState: string
+      failureReason: string | null
+    }
+  }
+}
+
+type PortfolioSummaryResponse = {
+  openRiskBudget: {
+    consumedPct: number
+  }
+  vetoBreakdownTop: Array<{
+    reasonCode: string
+    count: number
+  }>
+}
+
 type ActiveWindow = {
   guardWindowId: string
   newsEventId: string
@@ -59,6 +80,8 @@ const error = ref('')
 const providers = ref<ProviderItem[]>([])
 const activeWindows = ref<ActiveWindow[]>([])
 const upcomingEvents = ref<UpcomingEvent[]>([])
+const health = ref<HealthResponse | null>(null)
+const portfolioSummary = ref<PortfolioSummaryResponse | null>(null)
 const newsIntegrationDisabled = ref(false)
 const disabledReason = ref('')
 const inFlight = ref(false)
@@ -96,7 +119,14 @@ async function loadNewsData() {
   error.value = ''
 
   try {
-    const providerRes = await apiGet<ProviderResponse>('/news/providers')
+    const [providerRes, healthRes, portfolioRes] = await Promise.all([
+      apiGet<ProviderResponse>('/news/providers'),
+      apiGet<HealthResponse>('/health'),
+      apiGet<PortfolioSummaryResponse>('/portfolio/summary?maxOpenRisk=0.04&maxOpenTrades=6&lookback=200'),
+    ])
+
+    health.value = healthRes
+    portfolioSummary.value = portfolioRes
 
     const disablingProvider = providerRes.items.find(
       (provider) =>
@@ -134,6 +164,47 @@ async function loadNewsData() {
   }
 }
 
+const killSwitchState = computed(() => {
+  const database = health.value?.telemetry.database?.toUpperCase() ?? 'UNKNOWN'
+  const providerFreshness = health.value?.telemetry.newsProvider.freshnessState?.toUpperCase() ?? 'UNKNOWN'
+
+  if (database === 'DOWN' || providerFreshness === 'DOWN') {
+    return {
+      label: 'GUARDED',
+      toneClass: 'text-[var(--accent-danger)]',
+      detail: 'Fail-closed posture active due to dependency degradation.',
+    }
+  }
+
+  if (providerFreshness === 'DEGRADED' || providerFreshness === 'STALE') {
+    return {
+      label: 'ELEVATED',
+      toneClass: 'text-[var(--accent-warning)]',
+      detail: 'Provider freshness degraded; tighten discretionary risk controls.',
+    }
+  }
+
+  return {
+    label: 'NORMAL',
+    toneClass: 'text-[var(--accent-success)]',
+    detail: 'Protective exits remain allowed under current policy state.',
+  }
+})
+
+const dailyRiskUtilization = computed(() => {
+  const consumedPct = portfolioSummary.value?.openRiskBudget?.consumedPct ?? 0
+  return `${consumedPct.toFixed(1)}%`
+})
+
+const topVetoDriver = computed(() => {
+  const top = portfolioSummary.value?.vetoBreakdownTop?.[0]
+  if (!top) {
+    return 'N/A'
+  }
+
+  return `${top.reasonCode} (${top.count})`
+})
+
 onMounted(() => {
   void loadNewsData()
   pollTimer = setInterval(() => {
@@ -161,18 +232,18 @@ onBeforeUnmount(() => {
     <div class="grid gap-4 lg:grid-cols-3">
       <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 shadow-sm">
         <h2 class="mb-2 text-sm font-semibold">Kill Switch</h2>
-        <p class="text-base font-semibold text-[var(--accent-success)]">NORMAL</p>
-        <p class="text-xs text-[var(--text-secondary)]">Protective exits remain allowed under all policy states.</p>
+        <p class="text-base font-semibold" :class="killSwitchState.toneClass">{{ killSwitchState.label }}</p>
+        <p class="text-xs text-[var(--text-secondary)]">{{ killSwitchState.detail }}</p>
       </section>
       <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 shadow-sm">
         <h2 class="mb-2 text-sm font-semibold">Daily Risk Utilization</h2>
-        <p class="text-base font-semibold">58%</p>
-        <p class="text-xs text-[var(--text-secondary)]">Within configured tolerance.</p>
+        <p class="text-base font-semibold">{{ dailyRiskUtilization }}</p>
+        <p class="text-xs text-[var(--text-secondary)]">Derived from latest persisted portfolio decision summary.</p>
       </section>
       <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 shadow-sm">
         <h2 class="mb-2 text-sm font-semibold">Veto Driver (24h)</h2>
-        <p class="text-base font-semibold">NEWS_PROVIDER_STALE</p>
-        <p class="text-xs text-[var(--text-secondary)]">Most frequent reason code</p>
+        <p class="text-base font-semibold">{{ topVetoDriver }}</p>
+        <p class="text-xs text-[var(--text-secondary)]">Most frequent persisted veto reason in lookback window</p>
       </section>
     </div>
 

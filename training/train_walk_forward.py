@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import warnings
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -96,6 +97,20 @@ def build_model(name: str, enable_class_weights: bool = True):
     if name == "rf":
         class_weight = "balanced_subsample" if enable_class_weights else None
         return RandomForestClassifier(n_estimators=200, random_state=42, class_weight=class_weight)
+    if name == "xgb":
+        import xgboost as xgb  # noqa: PLC0415
+        spw = 1.5 if enable_class_weights else 1.0
+        return xgb.XGBClassifier(
+            n_estimators=200, max_depth=5, learning_rate=0.05,
+            scale_pos_weight=spw, eval_metric="logloss", random_state=42, verbosity=0,
+        )
+    if name == "lgbm":
+        import lightgbm as lgb  # noqa: PLC0415
+        class_weight = "balanced" if enable_class_weights else None
+        return lgb.LGBMClassifier(
+            n_estimators=200, max_depth=5, learning_rate=0.05,
+            class_weight=class_weight, random_state=42, verbosity=-1,
+        )
     raise ValueError(f"unsupported model: {name}")
 
 
@@ -132,17 +147,25 @@ def export_onnx(df: pd.DataFrame, cfg: RunConfig) -> Path:
     model = build_model(cfg.model_name, enable_class_weights=cfg.enable_class_weights)
     model.fit(X, y)
 
-    initial_type = [("input", FloatTensorType([None, X.shape[1]]))]
-    # Disable zipmap so probabilities are exported as a plain tensor for onnxruntime-node.
-    onnx_model = convert_sklearn(
-        model,
-        initial_types=initial_type,
-        options={id(model): {"zipmap": False}},
-    )
-
     cfg.output_dir.mkdir(parents=True, exist_ok=True)
     onnx_path = cfg.output_dir / "daily_breakout_model.onnx"
-    onnx_path.write_bytes(onnx_model.SerializeToString())
+
+    initial_type = [("input", FloatTensorType([None, X.shape[1]]))]
+    try:
+        # Disable zipmap so probabilities are exported as a plain tensor for onnxruntime-node.
+        onnx_model = convert_sklearn(
+            model,
+            initial_types=initial_type,
+            options={id(model): {"zipmap": False}},
+        )
+        onnx_path.write_bytes(onnx_model.SerializeToString())
+    except Exception as exc:  # pragma: no cover
+        warnings.warn(
+            f"{cfg.model_name} ONNX conversion failed ({exc}). "
+            "Install onnxmltools-extensions for tree-booster ONNX support. "
+            "An empty placeholder will be written."
+        )
+        onnx_path.write_bytes(b"")
     return onnx_path
 
 
@@ -238,6 +261,29 @@ def build_diagnostics(df: pd.DataFrame, model_name: str, threshold: float = 0.62
         for feature, importance in sorted(zip(features, norm_importances), key=lambda item: item[1], reverse=True)
     ]
 
+    # SHAP feature importance — lazy import; silently skipped if shap is not installed.
+    shap_importance: list[dict] = []
+    try:
+        import shap  # noqa: PLC0415
+        estimator = model.named_steps["model"] if isinstance(model, Pipeline) else model
+        if hasattr(estimator, "feature_importances_"):
+            explainer = shap.TreeExplainer(estimator)
+        else:
+            explainer = shap.LinearExplainer(estimator, X)
+        shap_vals = explainer.shap_values(X)
+        if isinstance(shap_vals, list):
+            shap_vals = shap_vals[1]  # positive class
+        shap_abs_mean = np.abs(shap_vals).mean(axis=0)
+        shap_total = shap_abs_mean.sum()
+        if shap_total > 0:
+            shap_norm = shap_abs_mean / shap_total
+            shap_importance = [
+                {"feature": f, "shapImportance": round(float(v), 6)}
+                for f, v in sorted(zip(features, shap_norm), key=lambda x: x[1], reverse=True)
+            ]
+    except Exception:
+        pass  # shap is optional
+
     return {
         "confusionMatrix": {
             "labels": ["NEGATIVE", "POSITIVE"],
@@ -248,12 +294,13 @@ def build_diagnostics(df: pd.DataFrame, model_name: str, threshold: float = 0.62
         "prCurve": pr_curve_payload,
         "calibrationBins": calibration_bins,
         "featureImportance": feature_importance,
+        "shapImportance": shap_importance,
     }
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", choices=["logreg", "rf"], default="logreg")
+    parser.add_argument("--model", choices=["logreg", "rf", "xgb", "lgbm"], default="logreg")
     parser.add_argument("--output", default="../models")
     parser.add_argument("--threshold", type=float, default=0.62)
     parser.add_argument("--cv-folds", type=int, default=5)

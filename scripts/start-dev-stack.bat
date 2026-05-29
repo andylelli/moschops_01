@@ -31,6 +31,11 @@ if errorlevel 1 (
   exit /b 1
 )
 
+if not defined POSTGRES_HOST_PORT set "POSTGRES_HOST_PORT=5432"
+set "DATABASE_URL=postgresql://postgres:postgres@localhost:%POSTGRES_HOST_PORT%/moschops"
+
+echo [start-dev-stack] Using PostgreSQL host port %POSTGRES_HOST_PORT%.
+
 echo [start-dev-stack] Launching backend window...
 start "moschops-backend-dev" cmd /k ""%SCRIPTS_DIR%\start-backend-dev.bat""
 

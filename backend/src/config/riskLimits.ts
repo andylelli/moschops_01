@@ -5,6 +5,7 @@
  * This module centralizes all risk-related configuration to ensure consistency
  * across all decision points (signal, portfolio, account levels).
  */
+import { recordFileLog } from "../services/file-log";
 
 export const RISK_LIMITS = {
   // Portfolio-level limits
@@ -68,5 +69,11 @@ export function validateRiskLimits(): void {
     );
   }
   
+  recordFileLog({
+    category: "startup",
+    level: "info",
+    event: "risk_limits_validated",
+    message: "Risk limits validated successfully",
+  });
   console.log("✓ Risk limits validated successfully");
 }

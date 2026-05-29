@@ -1,32 +1,66 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { useUiStore } from './stores/ui'
+import { apiGet } from './api'
 import KillSwitchBanner from './components/KillSwitchBanner.vue'
 import AlertRail from './components/AlertRail.vue'
+import IconActionButton from './components/IconActionButton.vue'
+import IconLabel from './components/IconLabel.vue'
+import ThemeToggle from './components/ThemeToggle.vue'
+import EnvironmentSwitcher from './components/EnvironmentSwitcher.vue'
+import StrategyFilter from './components/StrategyFilter.vue'
+import DateRangePicker from './components/DateRangePicker.vue'
 
 const ui = useUiStore()
 const route = useRoute()
 const isMobileMenuOpen = ref(false)
+const providerName = ref('N/A')
+const providerTier = ref('N/A')
+const providerFreshness = ref('UNAVAILABLE')
+const providerLastSuccess = ref<string | null>(null)
+const killSwitchState = ref<'normal' | 'armed' | 'tripped'>('normal')
+const killSwitchReason = ref('No active override')
+const killSwitchTimestamp = ref('')
+const alertItems = ref<
+  Array<{
+    id: string
+    severity: 'info' | 'warning' | 'critical' | 'success'
+    title: string
+    detail: string
+    source: string
+    timestamp: string
+  }>
+>([])
 
-const alertItems = [
-  {
-    id: 'ALR-2201',
-    severity: 'warning' as const,
-    title: 'Provider Freshness Degrading',
-    detail: 'News sync latency crossed 2x polling interval in one region.',
-    source: 'news-provider',
-    timestamp: '2026-05-22T14:25:00Z',
-  },
-  {
-    id: 'ALR-2202',
-    severity: 'info' as const,
-    title: 'Training Capacity Available',
-    detail: 'Queue depth low. Preset launch windows are open.',
-    source: 'training-orchestrator',
-    timestamp: '2026-05-22T14:20:00Z',
-  },
-]
+const strategyOptions = ['daily-breakout-5-10', 'mean-revert-eur', 'macro-momentum']
+
+type HeaderHealthResponse = {
+  status: string
+  timestamp: string
+  telemetry: {
+    database: string
+    newsProvider: {
+      provider: string
+      tier: string
+      freshnessState: string
+      lastSuccessfulSyncUtc: string | null
+      failureReason: string | null
+    }
+  }
+}
+
+type IncidentResponse = {
+  items: Array<{
+    incidentId: string
+    severity: string
+    summary: string
+    eventType: string
+    createdAtUtc: string
+  }>
+}
+
+let providerPollTimer: ReturnType<typeof setInterval> | null = null
 
 const onKeyDown = (event: KeyboardEvent) => {
   if (event.key === 'Escape') {
@@ -34,13 +68,126 @@ const onKeyDown = (event: KeyboardEvent) => {
   }
 }
 
+const providerToneClass = computed(() => {
+  if (providerFreshness.value === 'FRESH') {
+    return 'text-[var(--accent-success)]'
+  }
+
+  if (providerFreshness.value === 'DEGRADED' || providerFreshness.value === 'STALE') {
+    return 'text-[var(--accent-warning)]'
+  }
+
+  if (providerFreshness.value === 'DOWN') {
+    return 'text-[var(--accent-danger)]'
+  }
+
+  return 'text-[var(--text-primary)]'
+})
+
+const providerSubtitle = computed(() => {
+  if (!providerLastSuccess.value) {
+    return `Freshness ${providerFreshness.value} | No successful sync yet`
+  }
+
+  return `Freshness ${providerFreshness.value} | Last success ${providerLastSuccess.value}`
+})
+
+function mapSeverity(value: string): 'info' | 'warning' | 'critical' | 'success' {
+  const normalized = value.toUpperCase()
+
+  if (normalized === 'CRITICAL' || normalized === 'ERROR' || normalized === 'DOWN') {
+    return 'critical'
+  }
+
+  if (normalized === 'WARNING' || normalized === 'DEGRADED' || normalized === 'STALE') {
+    return 'warning'
+  }
+
+  if (normalized === 'SUCCESS' || normalized === 'UP' || normalized === 'FRESH') {
+    return 'success'
+  }
+
+  return 'info'
+}
+
+function mapKillSwitchState(database: string, freshness: string): 'normal' | 'armed' | 'tripped' {
+  const db = database.toUpperCase()
+  const provider = freshness.toUpperCase()
+
+  if (db === 'DOWN' || provider === 'DOWN') {
+    return 'tripped'
+  }
+
+  if (provider === 'DEGRADED' || provider === 'STALE') {
+    return 'armed'
+  }
+
+  return 'normal'
+}
+
+async function loadHeaderTelemetry() {
+  const [healthResult, incidentsResult] = await Promise.all([
+    apiGet<HeaderHealthResponse>('/health')
+      .then((value) => ({ ok: true as const, value }))
+      .catch((error) => ({ ok: false as const, error })),
+    apiGet<IncidentResponse>('/incidents?limit=2')
+      .then((value) => ({ ok: true as const, value }))
+      .catch((error) => ({ ok: false as const, error })),
+  ])
+
+  if (healthResult.ok) {
+    const response = healthResult.value
+    providerName.value = response.telemetry.newsProvider.provider
+    providerTier.value = response.telemetry.newsProvider.tier
+    providerFreshness.value = response.telemetry.newsProvider.freshnessState
+    providerLastSuccess.value = response.telemetry.newsProvider.lastSuccessfulSyncUtc
+
+    killSwitchState.value = mapKillSwitchState(
+      response.telemetry.database,
+      response.telemetry.newsProvider.freshnessState,
+    )
+    killSwitchTimestamp.value = response.timestamp
+    killSwitchReason.value =
+      response.telemetry.newsProvider.failureReason ??
+      (killSwitchState.value === 'normal'
+        ? 'Fail-closed posture active; protective exits remain enabled'
+        : 'Safety posture raised due to dependency freshness degradation')
+  } else {
+    providerFreshness.value = 'UNAVAILABLE'
+    providerLastSuccess.value = null
+    killSwitchState.value = 'armed'
+    killSwitchReason.value = 'Backend health unavailable; assume guarded posture until recovered'
+    killSwitchTimestamp.value = new Date().toISOString()
+  }
+
+  if (incidentsResult.ok) {
+    alertItems.value = incidentsResult.value.items.map((incident) => ({
+      id: incident.incidentId,
+      severity: mapSeverity(incident.severity),
+      title: incident.eventType,
+      detail: incident.summary,
+      source: 'incidents',
+      timestamp: incident.createdAtUtc,
+    }))
+  } else {
+    alertItems.value = []
+  }
+}
+
 onMounted(() => {
   ui.applyTheme()
   window.addEventListener('keydown', onKeyDown)
+  void loadHeaderTelemetry()
+  providerPollTimer = setInterval(() => {
+    void loadHeaderTelemetry()
+  }, 30_000)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeyDown)
+  if (providerPollTimer) {
+    clearInterval(providerPollTimer)
+  }
   document.body.classList.remove('mobile-menu-open')
 })
 
@@ -78,6 +225,8 @@ const navItems = [
 
 <template>
   <div class="min-h-screen overflow-x-hidden bg-[var(--bg-base)] text-[var(--text-primary)]">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
     <div
       v-if="isMobileMenuOpen"
       class="fixed inset-0 z-40 bg-black/45 md:hidden"
@@ -94,13 +243,7 @@ const navItems = [
     >
       <div class="mb-4 flex items-center justify-between">
         <h2 class="text-sm font-semibold">Navigation</h2>
-        <button
-          class="rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-sm"
-          aria-label="Close navigation menu"
-          @click="isMobileMenuOpen = false"
-        >
-          Close
-        </button>
+        <IconActionButton icon="circle-xmark" label="Close" aria-label="Close navigation menu" @click="isMobileMenuOpen = false" />
       </div>
       <nav class="flex flex-col gap-2">
         <RouterLink
@@ -118,13 +261,7 @@ const navItems = [
 
     <header class="sticky top-0 z-20 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]">
       <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3">
-        <button
-          class="rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-sm md:hidden"
-          aria-label="Open navigation menu"
-          @click="isMobileMenuOpen = true"
-        >
-          Menu
-        </button>
+        <IconActionButton icon="list-check" label="Menu" aria-label="Open navigation menu" class="md:hidden" @click="isMobileMenuOpen = true" />
         <div class="mr-auto">
           <h1 class="flex items-center gap-2 text-lg font-semibold">
             <FontAwesomeIcon :icon="['fas', 'bolt']" class="text-sm text-[var(--accent-warning)]" />
@@ -133,15 +270,9 @@ const navItems = [
           <p class="text-xs text-[var(--text-secondary)]">Risk-first monitoring and training control center</p>
         </div>
 
-        <span class="rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-xs font-semibold">
-          Role: {{ ui.operatorRole }}
-        </span>
-        <select v-model="ui.environment" class="w-24 rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-sm" aria-label="Environment selector">
-          <option value="dev">dev</option>
-          <option value="demo">demo</option>
-          <option value="pilot">pilot</option>
-          <option value="live">live</option>
-        </select>
+        <IconLabel icon="user-shield" :label="`Role ${ui.operatorRole}`" />
+        <IconLabel icon="heartbeat" :label="`News ${providerName} (${providerTier})`" :subtitle="providerSubtitle" :tone-class="providerToneClass" />
+        <EnvironmentSwitcher v-model="ui.environment" />
 
         <select v-model="ui.operatorRole" class="w-28 rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-sm" aria-label="Operator role selector">
           <option value="viewer">viewer</option>
@@ -149,11 +280,7 @@ const navItems = [
           <option value="admin">admin</option>
         </select>
 
-        <select v-model="ui.strategy" class="w-40 rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-sm" aria-label="Strategy selector">
-          <option value="daily-breakout-5-10">breakout-5-10</option>
-          <option value="mean-revert-eur">mean-revert-eur</option>
-          <option value="macro-momentum">macro-momentum</option>
-        </select>
+        <StrategyFilter v-model="ui.strategy" :options="strategyOptions" />
 
         <select v-model="ui.datasetProfile" class="w-36 rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-sm" aria-label="Dataset profile selector">
           <option value="rolling-90d">rolling-90d</option>
@@ -161,13 +288,14 @@ const navItems = [
           <option value="event-focused">event-focused</option>
         </select>
 
-        <input v-model="ui.startDate" type="date" class="w-36 rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-sm" aria-label="Start date" />
-        <input v-model="ui.endDate" type="date" class="w-36 rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-sm" aria-label="End date" />
+        <DateRangePicker
+          :start-date="ui.startDate"
+          :end-date="ui.endDate"
+          @update:startDate="ui.startDate = $event"
+          @update:endDate="ui.endDate = $event"
+        />
 
-        <button class="w-[7.5rem] rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-1 text-center text-sm" @click="ui.toggleTheme()">
-          <FontAwesomeIcon :icon="['fas', ui.theme === 'dark' ? 'moon' : 'sun']" class="mr-1" />
-          {{ ui.theme }}
-        </button>
+        <ThemeToggle :theme="ui.theme" @toggle="ui.toggleTheme()" />
       </div>
       <nav class="mx-auto hidden max-w-7xl gap-2 overflow-auto px-4 pb-3 md:flex">
         <RouterLink
@@ -184,15 +312,15 @@ const navItems = [
 
       <div class="mx-auto grid max-w-7xl gap-3 px-4 pb-3">
         <KillSwitchBanner
-          state="normal"
+          :state="killSwitchState"
           source="risk-engine"
-          reason="Fail-closed posture active; protective exits remain enabled"
-          timestamp="2026-05-22T14:25:00Z"
+          :reason="killSwitchReason"
+          :timestamp="killSwitchTimestamp"
         />
-        <AlertRail :alerts="alertItems" />
+        <AlertRail v-if="alertItems.length > 0" :alerts="alertItems" />
       </div>
     </header>
-    <main class="mx-auto max-w-7xl p-4">
+    <main id="main-content" class="mx-auto max-w-7xl p-4">
       <RouterView />
     </main>
   </div>

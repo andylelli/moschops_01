@@ -87,10 +87,12 @@ What each script does:
 - `start-db.bat`: starts PostgreSQL with Docker Compose.
 - `init-backend.bat`: creates `backend/.env` if missing, installs deps, generates Prisma client, and runs migrations.
 - `start-dashboard-dev.bat`: starts the dashboard development server.
-- `start-dev-stack.bat`: starts DB and launches backend/dashboard dev servers in separate terminal windows.
+- `start-dev-stack.bat`: starts DB and launches backend/dashboard dev servers in separate terminal windows. If port 5432 is already in use, it auto-selects a free host port and propagates it to the backend.
 - `check-local-health.bat`: checks backend health endpoint (`http://localhost:3000/health` by default).
 - `stop-db.bat`: stops PostgreSQL service.
 - `deploy-ea-to-mt5.bat`: copies `mql5/Experts/DailyBreakoutEA.mq5` into the selected MT5 data directory under `MQL5/Experts`.
+
+Operational logs are written under `backend/logs/` by category when the backend runs locally.
 
 ## Run Locally
 

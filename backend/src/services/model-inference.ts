@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import * as ort from "onnxruntime-node";
+import { recordFileLog } from "./file-log";
 
 let session: ort.InferenceSession | null = null;
 let modelLoadError: Error | null = null;
@@ -46,6 +47,13 @@ async function getSession(): Promise<ort.InferenceSession | null> {
   if (!fs.existsSync(modelPath)) {
     const error = new Error(`Model file not found: ${modelPath}`);
     modelLoadError = error;
+    recordFileLog({
+      category: "model",
+      level: "error",
+      event: "model_load_failed",
+      message: "Model file not found",
+      context: { code: "FILE_NOT_FOUND", path: modelPath, error: error.message },
+    });
     console.error("MODEL_LOAD_FAILED:", {
       code: "FILE_NOT_FOUND",
       path: modelPath,
@@ -57,6 +65,13 @@ async function getSession(): Promise<ort.InferenceSession | null> {
   try {
     console.log("Loading ONNX model from:", modelPath);
     session = await ort.InferenceSession.create(modelPath);
+    recordFileLog({
+      category: "model",
+      level: "info",
+      event: "model_load_success",
+      message: "ONNX model loaded",
+      context: { path: modelPath, inputs: session.inputNames, outputs: session.outputNames },
+    });
     console.log("MODEL_LOAD_SUCCESS:", {
       path: modelPath,
       inputs: session.inputNames,
@@ -66,6 +81,13 @@ async function getSession(): Promise<ort.InferenceSession | null> {
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
     modelLoadError = err;
+    recordFileLog({
+      category: "model",
+      level: "error",
+      event: "model_load_failed",
+      message: "Model load error",
+      context: { code: "LOAD_ERROR", path: modelPath, error: err.message },
+    });
     console.error("MODEL_LOAD_FAILED:", {
       code: "LOAD_ERROR",
       path: modelPath,
@@ -111,6 +133,13 @@ export async function preflightModelInference(): Promise<void> {
     if (score === null) {
       modelReady = false;
       lastInferenceError = "invalid_warmup_output";
+      recordFileLog({
+        category: "model",
+        level: "error",
+        event: "model_preflight_failed",
+        message: "Warmup output failed validation",
+        context: { code: "INVALID_WARMUP_OUTPUT", outputNames: active.outputNames },
+      });
       console.error("MODEL_LOAD_FAILED:", {
         code: "INVALID_WARMUP_OUTPUT",
         outputNames: active.outputNames,
@@ -120,12 +149,26 @@ export async function preflightModelInference(): Promise<void> {
 
     modelReady = true;
     lastInferenceError = null;
+    recordFileLog({
+      category: "model",
+      level: "info",
+      event: "model_preflight_ok",
+      message: "Model preflight succeeded",
+      context: { outputNames: active.outputNames },
+    });
     console.log("MODEL_PREFLIGHT_OK:", { outputNames: active.outputNames });
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
     modelLoadError = err;
     modelReady = false;
     lastInferenceError = err.message;
+    recordFileLog({
+      category: "model",
+      level: "error",
+      event: "model_preflight_failed",
+      message: "Model preflight error",
+      context: { code: "PREFLIGHT_ERROR", error: err.message },
+    });
     console.error("MODEL_LOAD_FAILED:", {
       code: "PREFLIGHT_ERROR",
       error: err.message,
@@ -156,6 +199,13 @@ export async function inferScore(features: number[]): Promise<InferenceResult> {
   const active = await getSession();
   if (!active) {
     if (modelLoadError) {
+      recordFileLog({
+        category: "model",
+        level: "warn",
+        event: "inference_skipped",
+        message: "Inference skipped because model load failed",
+        context: { reason: "model_load_failed", error: modelLoadError.message },
+      });
       console.warn("INFERENCE_SKIPPED:", {
         reason: "model_load_failed",
         error: modelLoadError.message,
@@ -171,6 +221,13 @@ export async function inferScore(features: number[]): Promise<InferenceResult> {
   try {
     // Validate features
     if (!Array.isArray(features) || features.length !== 5) {
+      recordFileLog({
+        category: "model",
+        level: "warn",
+        event: "inference_skipped",
+        message: "Inference skipped because features were invalid",
+        context: { reason: "invalid_features", count: features.length, expected: 5 },
+      });
       console.warn("INFERENCE_SKIPPED:", {
         reason: "invalid_features",
         count: features.length,
@@ -181,6 +238,13 @@ export async function inferScore(features: number[]): Promise<InferenceResult> {
 
     // Check for NaN or Infinity
     if (!features.every((f) => Number.isFinite(f))) {
+      recordFileLog({
+        category: "model",
+        level: "warn",
+        event: "inference_skipped",
+        message: "Inference skipped because features were non-finite",
+        context: { reason: "non_finite_features", features },
+      });
       console.warn("INFERENCE_SKIPPED:", {
         reason: "non_finite_features",
         features,
@@ -196,6 +260,13 @@ export async function inferScore(features: number[]): Promise<InferenceResult> {
     const score = parseProbability(active, outputs as Record<string, ort.Tensor>);
 
     if (score === null) {
+      recordFileLog({
+        category: "model",
+        level: "warn",
+        event: "inference_skipped",
+        message: "Inference skipped because output was invalid",
+        context: { reason: "invalid_output", outputNames: active.outputNames },
+      });
       console.warn("INFERENCE_SKIPPED:", {
         reason: "invalid_output",
         outputNames: active.outputNames,
@@ -212,6 +283,13 @@ export async function inferScore(features: number[]): Promise<InferenceResult> {
     if (err.message.includes("Non tensor type is temporarily not supported")) {
       modelLoadError = err;
       modelReady = false;
+      recordFileLog({
+        category: "model",
+        level: "error",
+        event: "model_load_failed",
+        message: "Model load failed because of unsupported output",
+        context: { code: "UNSUPPORTED_MODEL_OUTPUT", error: err.message },
+      });
       console.error("MODEL_LOAD_FAILED:", {
         code: "UNSUPPORTED_MODEL_OUTPUT",
         error: err.message,
@@ -219,6 +297,13 @@ export async function inferScore(features: number[]): Promise<InferenceResult> {
       return { score: null, status: "MODEL_UNAVAILABLE" };
     }
 
+    recordFileLog({
+      category: "model",
+      level: "error",
+      event: "inference_error",
+      message: "Inference execution failed",
+      context: { error: err.message, features, stack: err.stack },
+    });
     console.error("INFERENCE_ERROR:", {
       error: err.message,
       features,

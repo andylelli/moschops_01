@@ -11,6 +11,7 @@ import {
   parseEnabledSymbols,
 } from "./news-domain";
 import { env } from "../utils/env";
+import { recordFileLog } from "./file-log";
 
 interface LoggerLike {
   info: (obj: unknown, msg?: string) => void;
@@ -152,6 +153,13 @@ export async function syncNewsNow(log: LoggerLike): Promise<void> {
       budgetUsed: 0,
       budgetLimit: env.NEWS_BUDGET_DAILY,
     });
+    recordFileLog({
+      category: "news",
+      level: "info",
+      event: "news_sync_disabled",
+      message: "news sync disabled",
+      context: { budgetUsed: 0, budgetLimit: env.NEWS_BUDGET_DAILY },
+    });
     return;
   }
 
@@ -164,6 +172,13 @@ export async function syncNewsNow(log: LoggerLike): Promise<void> {
       failureReason: "SYMBOL_MAPPING_INCOMPLETE",
       budgetUsed: 0,
       budgetLimit: env.NEWS_BUDGET_DAILY,
+    });
+    recordFileLog({
+      category: "news",
+      level: "warn",
+      event: "news_sync_skipped",
+      message: "news sync skipped because symbol mapping is incomplete",
+      context: { failureReason: "SYMBOL_MAPPING_INCOMPLETE" },
     });
     return;
   }
@@ -183,6 +198,13 @@ export async function syncNewsNow(log: LoggerLike): Promise<void> {
       failureReason: "BUDGET_RESERVE_PROTECTED",
       budgetUsed: previousBudgetUsed,
       budgetLimit: env.NEWS_BUDGET_DAILY,
+    });
+    recordFileLog({
+      category: "news",
+      level: "warn",
+      event: "news_sync_budget_blocked",
+      message: "news sync blocked by reserve budget protection",
+      context: { budgetUsed: previousBudgetUsed, budgetLimit: env.NEWS_BUDGET_DAILY },
     });
     return;
   }
@@ -313,6 +335,13 @@ export async function syncNewsNow(log: LoggerLike): Promise<void> {
     });
 
     log.info({ rows: rows.length, budgetUsed: nextBudgetUsed }, "news sync completed");
+    recordFileLog({
+      category: "news",
+      level: "info",
+      event: "news_sync_completed",
+      message: "news sync completed",
+      context: { rows: rows.length, budgetUsed: nextBudgetUsed },
+    });
   } catch (error) {
     const freshnessState = computeFreshnessState(existing?.lastSuccessfulSyncUtc, now);
     const failureReason =
@@ -334,6 +363,13 @@ export async function syncNewsNow(log: LoggerLike): Promise<void> {
     });
 
     log.warn({ error }, "news sync failed");
+    recordFileLog({
+      category: "news",
+      level: "warn",
+      event: "news_sync_failed",
+      message: "news sync failed",
+      context: { freshnessState, failureReason, budgetUsed: usedBudget, error },
+    });
   }
 }
 

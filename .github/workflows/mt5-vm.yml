@@ -1,0 +1,168 @@
+# Manages an Azure Windows VM that runs the Fastify backend and MT5 terminal together.
+#
+# Required GitHub secrets (Settings → Secrets and variables → Actions):
+#   AZURE_CREDENTIALS    JSON from: az ad sp create-for-rbac --role contributor
+#                                    --scopes /subscriptions/<id> --sdk-auth
+#   VM_ADMIN_PASSWORD    Strong password for the Windows VM local admin account
+#   GH_PAT               GitHub Personal Access Token (repo read scope)
+#   DATABASE_URL         postgresql://postgres:postgres@localhost:5432/moschops
+#   MT5_LOGIN            MT5 broker account number
+#   MT5_PASSWORD         MT5 broker account password
+#   MT5_SERVER           MT5 broker server name  (e.g. MetaQuotes-Demo)
+#   FMP_API_KEY          Financial Modeling Prep API key (for news sync)
+#
+# Usage:
+#   Actions → "MT5 VM — Manage" → Run workflow → choose action: start | stop | status
+
+name: MT5 VM — Manage
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Action to perform"
+        required: true
+        type: choice
+        options:
+          - start
+          - stop
+          - status
+
+env:
+  RESOURCE_GROUP: rg-moschops-mt5
+  VM_NAME:        vm-moschops-mt5
+  LOCATION:       uksouth
+  VM_SIZE:        Standard_B2ms    # 2 vCPU, 8 GB RAM — sufficient for MT5 + Node backend
+  ADMIN_USER:     mt5admin
+  REPO:           andylelli/moschops_01
+
+jobs:
+  manage:
+    name: "${{ inputs.action }} VM"
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # ── STATUS ─────────────────────────────────────────────────────────────
+      - name: Show VM status
+        if: inputs.action == 'status'
+        run: |
+          az vm show \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$VM_NAME" \
+            --show-details \
+            --query "{powerState:powerState, publicIP:publicIps, size:hardwareProfile.vmSize}" \
+            --output table
+
+      # ── STOP ───────────────────────────────────────────────────────────────
+      - name: Deallocate VM
+        if: inputs.action == 'stop'
+        run: |
+          az vm deallocate \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$VM_NAME"
+          echo "VM deallocated. Disk state preserved. Billing stopped."
+
+      # ── START ──────────────────────────────────────────────────────────────
+      - name: Ensure resource group
+        if: inputs.action == 'start'
+        run: |
+          az group create \
+            --name "$RESOURCE_GROUP" \
+            --location "$LOCATION" \
+            --output none
+
+      - name: Create VM (first run) or start existing
+        if: inputs.action == 'start'
+        run: |
+          if az vm show --resource-group "$RESOURCE_GROUP" --name "$VM_NAME" &>/dev/null 2>&1; then
+            echo "Starting existing VM..."
+            az vm start \
+              --resource-group "$RESOURCE_GROUP" \
+              --name "$VM_NAME" \
+              --output none
+          else
+            echo "Creating static public IP..."
+            az network public-ip create \
+              --resource-group "$RESOURCE_GROUP" \
+              --name pip-moschops-mt5 \
+              --sku Standard \
+              --allocation-method Static \
+              --output none
+
+            echo "Creating VM for the first time..."
+            az vm create \
+              --resource-group "$RESOURCE_GROUP" \
+              --name "$VM_NAME" \
+              --image  Win2022Datacenter \
+              --size   "$VM_SIZE" \
+              --admin-username "$ADMIN_USER" \
+              --admin-password "${{ secrets.VM_ADMIN_PASSWORD }}" \
+              --public-ip-address pip-moschops-mt5 \
+              --os-disk-size-gb 128 \
+              --output none
+          fi
+
+      - name: Open port 3000 for backend health checks
+        if: inputs.action == 'start'
+        # Idempotent — succeeds even if the rule already exists
+        run: |
+          az vm open-port \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$VM_NAME" \
+            --port 3000 \
+            --priority 1100 \
+            --output none 2>/dev/null || true
+
+      # Provision runs every start, but vm-provision.ps1 detects the marker file
+      # and skips the full install on subsequent runs (only pulls latest code).
+      - name: Provision / update application
+        if: inputs.action == 'start'
+        run: |
+          az vm run-command invoke \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$VM_NAME" \
+            --command-id RunPowerShellScript \
+            --scripts @scripts/vm-provision.ps1 \
+            --parameters \
+              "${{ secrets.GH_PAT }}" \
+              "${{ env.REPO }}" \
+              "${{ secrets.DATABASE_URL }}" \
+              "${{ secrets.FMP_API_KEY }}"
+
+      - name: Start backend and MT5
+        if: inputs.action == 'start'
+        run: |
+          az vm run-command invoke \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$VM_NAME" \
+            --command-id RunPowerShellScript \
+            --scripts @scripts/vm-start-services.ps1 \
+            --parameters \
+              "${{ secrets.MT5_LOGIN }}" \
+              "${{ secrets.MT5_PASSWORD }}" \
+              "${{ secrets.MT5_SERVER }}"
+
+      - name: Print connection info
+        if: inputs.action == 'start'
+        run: |
+          PUBLIC_IP=$(az vm show \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$VM_NAME" \
+            --show-details \
+            --query publicIps \
+            --output tsv)
+          echo ""
+          echo "  VM running:      $PUBLIC_IP"
+          echo "  Backend health:  http://$PUBLIC_IP:3000/health"
+          echo "  RDP:             mstsc /v:$PUBLIC_IP (user: $ADMIN_USER)"
+          echo ""
+          echo "  Stop billing:    re-run this workflow with action=stop"

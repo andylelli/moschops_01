@@ -1,5 +1,5 @@
 {
-  "generatedAtUtc": "2026-05-24T10:04:29.373289+00:00",
+  "generatedAtUtc": "2026-05-27T18:18:11.163130+00:00",
   "model": "logreg",
   "onnxPath": "C:\\moschops_01\\models\\daily_breakout_model.onnx",
   "config": {

@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { apiGet } from '../api'
 import PageHeader from '../components/PageHeader.vue'
+import HealthTile from '../components/HealthTile.vue'
 
 const POLL_INTERVAL_MS = 10_000
 const STALE_AFTER_MS = POLL_INTERVAL_MS * 2
@@ -55,6 +56,24 @@ const viewFreshness = computed(() => {
 
   return { label: 'FRESH', toneClass: 'text-[var(--accent-success)]' }
 })
+
+function mapSeverity(status: string): 'success' | 'warning' | 'critical' | 'info' {
+  const normalized = status.toUpperCase()
+
+  if (normalized === 'UP' || normalized === 'FRESH') {
+    return 'success'
+  }
+
+  if (normalized === 'DEGRADED' || normalized === 'STALE') {
+    return 'warning'
+  }
+
+  if (normalized === 'DOWN') {
+    return 'critical'
+  }
+
+  return 'info'
+}
 
 async function loadHealth() {
   if (inFlight.value) {
@@ -113,32 +132,41 @@ onBeforeUnmount(() => {
     </section>
 
     <div class="grid gap-4 lg:grid-cols-4">
-      <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
-        <h3 class="mb-2 text-sm font-semibold">Backend</h3>
-        <p class="text-sm">{{ health?.telemetry.backend ?? 'N/A' }}</p>
-      </section>
+      <HealthTile
+        label="Backend"
+        :status="health?.telemetry.backend?.toUpperCase() ?? 'N/A'"
+        :severity="mapSeverity(health?.telemetry.backend ?? 'N/A')"
+        source="backend"
+        :timestamp="lastUpdatedUtc ?? ''"
+        details="API process availability and request handling status."
+      />
 
-      <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
-        <h3 class="mb-2 text-sm font-semibold">Database</h3>
-        <p class="text-sm">{{ health?.telemetry.database ?? 'N/A' }}</p>
-      </section>
+      <HealthTile
+        label="Database"
+        :status="health?.telemetry.database?.toUpperCase() ?? 'N/A'"
+        :severity="mapSeverity(health?.telemetry.database ?? 'N/A')"
+        source="database"
+        :timestamp="lastUpdatedUtc ?? ''"
+        details="PostgreSQL connectivity and query response status."
+      />
 
-      <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
-        <h3 class="mb-2 text-sm font-semibold">Model Loader</h3>
-        <p class="text-sm">{{ health?.telemetry.modelLoader ?? 'N/A' }}</p>
-        <p class="text-sm text-[var(--text-secondary)]">{{ health?.telemetry.modelReason ?? 'No current model loading issue.' }}</p>
-      </section>
+      <HealthTile
+        label="Model Loader"
+        :status="health?.telemetry.modelLoader?.toUpperCase() ?? 'N/A'"
+        :severity="mapSeverity(health?.telemetry.modelLoader ?? 'N/A')"
+        source="model-loader"
+        :timestamp="lastUpdatedUtc ?? ''"
+        :details="health?.telemetry.modelReason ?? 'No current model loading issue.'"
+      />
 
-      <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
-        <h3 class="mb-2 text-sm font-semibold">News Provider</h3>
-        <p class="text-sm font-semibold">
-          {{ health?.telemetry.newsProvider.provider ?? 'N/A' }}
-          <span v-if="health?.telemetry.newsProvider.tier">({{ health.telemetry.newsProvider.tier }})</span>
-        </p>
-        <p class="text-sm text-[var(--text-secondary)]">Freshness: {{ health?.telemetry.newsProvider.freshnessState ?? 'N/A' }}</p>
-        <p class="text-sm text-[var(--text-secondary)]">Last success: {{ health?.telemetry.newsProvider.lastSuccessfulSyncUtc ?? 'N/A' }}</p>
-        <p class="text-sm text-[var(--text-secondary)]">Budget: {{ health?.telemetry.newsProvider.budgetUsed ?? 0 }} / {{ health?.telemetry.newsProvider.budgetLimit ?? 'N/A' }}</p>
-      </section>
+      <HealthTile
+        label="News Provider"
+        :status="health?.telemetry.newsProvider.freshnessState ?? 'N/A'"
+        :severity="mapSeverity(health?.telemetry.newsProvider.freshnessState ?? 'N/A')"
+        source="news-provider"
+        :timestamp="health?.telemetry.newsProvider.lastSuccessfulSyncUtc ?? ''"
+        :details="`${health?.telemetry.newsProvider.provider ?? 'N/A'} (${health?.telemetry.newsProvider.tier ?? 'N/A'}) | Budget ${health?.telemetry.newsProvider.budgetUsed ?? 0} / ${health?.telemetry.newsProvider.budgetLimit ?? 'N/A'}`"
+      />
     </div>
   </div>
 </template>

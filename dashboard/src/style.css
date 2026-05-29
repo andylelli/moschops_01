@@ -47,6 +47,23 @@ body.mobile-menu-open {
   outline-offset: 2px;
 }
 
+.skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: -3rem;
+  z-index: 100;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.375rem;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  padding: 0.5rem 0.75rem;
+  transition: top 160ms ease;
+}
+
+.skip-link:focus-visible {
+  top: 0.75rem;
+}
+
 table td,
 table th {
   min-height: 40px;
@@ -73,5 +90,16 @@ table th {
   .mobile-panel-pad {
     padding-top: max(1rem, env(safe-area-inset-top));
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }

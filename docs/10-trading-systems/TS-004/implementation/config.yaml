@@ -1,0 +1,211 @@
+# TS-004 Implementation Config
+# Generated from: docs/10-trading-systems/recipes/04-recipe-ts-004.md
+# Template:       docs/10-trading-systems/templates/implementation/ts_config_TEMPLATE.yaml
+
+# ── Identity ──────────────────────────────────────────────────────────────────
+system_id: "TS-004"
+name: "Event-Aware Trend Continuation"
+version: "1.0"
+recipe: "../recipes/04-recipe-ts-004.md"
+created: "2026-05-28"
+
+# ── Market ────────────────────────────────────────────────────────────────────
+symbol: "EURUSD"
+timeframe: "H4"
+
+# ── Label ─────────────────────────────────────────────────────────────────────
+label:
+  mode: "edge"
+  min_edge_bps: 8
+  horizon: 10
+  class_weight: "balanced"
+
+# ── Model ─────────────────────────────────────────────────────────────────────
+model:
+  estimator: "xgb"
+  calibration: "isotonic"
+  hyperparams:
+    n_estimators: 200
+    max_depth: 4
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_alpha: 0.1
+    reg_lambda: 1.0
+    random_state: 42
+
+# ── Features ──────────────────────────────────────────────────────────────────
+features:
+  set: "p1_extended"
+  include: []                # bocpd_cp_prob and ichimoku deferred to EXP-007/008
+  exclude: []
+
+# ── Regime Gate ───────────────────────────────────────────────────────────────
+regime_gate:
+  enabled: true
+  metric: "volatility_regime"
+  min: 0.80
+  max: 2.00
+  action: "block-all"
+
+# ── Signal Variant ────────────────────────────────────────────────────────────
+signal:
+  variant: "trend-follow"
+  trend_sma_window: 200
+  min_trend_strength: 0.30
+
+# ── Threshold ─────────────────────────────────────────────────────────────────
+threshold:
+  method: "constrained-optimisation"
+  probability_floor: 0.52
+  min_trades: 60
+  max_dd: 0.20
+
+# ── Walk-Forward CV ───────────────────────────────────────────────────────────
+cv:
+  folds: 5
+  window: "expanding"
+  embargo_bars: 5
+  horizon_bars: 8
+
+# ── Training Windows ──────────────────────────────────────────────────────────
+windows:
+  train_start: "2012-01-01"
+  dev_split: "2022-01-01"
+  holdout_start: "2023-01-01"
+  holdout_end: "2024-12-31"
+
+# ── Cost Model ────────────────────────────────────────────────────────────────
+costs:
+  spread_bps: 2.5
+  commission_bps: 1.0
+  slippage_bps: 0.5
+  overnight_bps_per_night: 0.5
+  stress:
+    spread_mult: 2.0
+    slippage_mult: 3.0
+
+# ── Promotion Gate Thresholds ─────────────────────────────────────────────────
+gates:
+  min_trades: 60
+  min_pf: 1.25
+  max_dd: 0.20
+  min_expectancy_bps: 5
+  min_fold_consistency: 0.60
+  min_auc: 0.53
+  max_brier: 0.25
+  max_pbo: 0.40
+
+# ── Data Source ──────────────────────────────────────────────────────────────
+data:
+  provider: "fmp"
+  endpoint: "https://financialmodelingprep.com/api/v3/historical-chart/4hour/EURUSD"
+  api_key_env: "FMP_API_KEY"          # Environment variable — never store key here
+  n_bars: 25000                       # Covers 2012-2024 H4 with margin (~21,900 bars)
+  cache_path: "docs/09-training-runs/data/EURUSD_H4.csv"
+  backend_url: "http://localhost:3000"
+
+# ── Training ──────────────────────────────────────────────────────────────────
+training:
+  script: "training/run_historical_split.py"
+  scaler: "standard"                  # standard | minmax | none
+  random_seed: 42                     # Global seed for data shuffle and model
+  onnx_export:
+    enabled: true
+    opset: 15
+    output_path: "models/{model_name}.onnx"
+  scaler_output_path: "models/scaler_{model_name}.pkl"
+
+# ── Validation ────────────────────────────────────────────────────────────────
+validation:
+  mc_simulation:
+    enabled: true                     # Applied from EXP-004 onwards
+    n_paths: 1000
+    confidence: 0.95
+    annualisation: 1512.0             # 252 trading days × 6 H4 bars/day
+    seed: 42
+  pbo:
+    enabled: true                     # Applied from EXP-004 onwards
+  shadow_trader:
+    enabled: true                     # Applied from EXP-001 onwards
+    threshold: 0.62
+    output_dir: "docs/09-training-runs/shadow/TS-004"
+
+# ── Live ──────────────────────────────────────────────────────────────────────
+live:
+  circuit_breaker:
+    max_daily_loss_pct: 0.015
+    max_drawdown_pct: 0.15
+    max_consecutive_losses: 4
+    cooldown_bars: 20
+  ea:
+    stop_atr_multiple: 1.5
+    max_spread_pips: 2.5
+    max_lot_size: 0.10
+    min_lot_size: 0.01
+    session_filter: false             # Regime gate acts as implicit session filter
+  retrain:
+    interval_days: 7
+    min_new_bars: 500
+    gate_auc_min: 0.52
+    gate_brier_max: 0.25
+    promote_if_better: true
+  monitoring:
+    metrics_prefix: "ts004"
+    alert_latency_ms: 200             # Matches signal delivery SLO (200 ms P95)
+    alert_no_signal_days: 3
+    signal_dist_shift_threshold: 0.10
+
+# ── Experiment Plan ───────────────────────────────────────────────────────────
+# overrides: structured field diffs applied on top of the base config above.
+# A runner applies base config first, then merges overrides for the target experiment.
+experiments:
+  - id: "EXP-001"
+    description: "XGBoost baseline — default features, no regime gate, edge labels"
+    phase: "dev"
+    overrides:
+      regime_gate:
+        enabled: false
+      features:
+        set: "default"
+      threshold:
+        method: "median"
+
+  - id: "EXP-002"
+    description: "Add vol_regime gate [0.80, 2.00]"
+    phase: "dev"
+    overrides:
+      regime_gate:
+        enabled: true
+
+  - id: "EXP-003"
+    description: "Switch to p1_extended features (RSI, ADX, efficiency_ratio, MACD)"
+    phase: "dev"
+    overrides:
+      features:
+        set: "p1_extended"
+
+  - id: "EXP-004"
+    description: "Apply constrained-optimisation threshold selection"
+    phase: "dev"
+    overrides:
+      threshold:
+        method: "constrained-optimisation"
+
+  - id: "EXP-005"
+    description: "Stress cost matrix (2x spread, 3x slippage) on EXP-004 best config"
+    phase: "dev"
+    overrides:
+      costs:
+        spread_bps: 5.0              # 2x stress
+        slippage_bps: 1.5            # 3x stress
+
+  - id: "HOLDOUT"
+    description: "Single locked holdout run on 2023-2024 — acceptance only"
+    phase: "holdout"
+    overrides: {}                    # No changes — lock best EXP-004/EXP-005 config
+
+# ── Output ────────────────────────────────────────────────────────────────────
+output:
+  runs_dir: "docs/09-training-runs/runs"
+  model_name: "ts004_v1"

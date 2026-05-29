@@ -21,6 +21,7 @@
     "verify:symbol-mapping": "tsx src/tools/symbol-mapping-probe.ts",
     "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\"",
     "test": "vitest run",
+    "test:db": "set RUN_DB_TESTS=true&& vitest run",
     "test:watch": "vitest",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

@@ -38,7 +38,23 @@ function buildDateFromValue(value: string): Date | null {
     return null;
   }
 
-  const normalized = trimmed.includes("T") ? trimmed : `${trimmed}T00:00:00Z`;
+  let normalized = trimmed;
+
+  // FMP intraday rows use "YYYY-MM-DD HH:mm:ss"; normalize to ISO UTC.
+  if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}(:\d{2})?$/.test(normalized)) {
+    normalized = normalized.replace(" ", "T");
+  }
+
+  // Date-only values are interpreted as UTC midnight.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    normalized = `${normalized}T00:00:00Z`;
+  }
+
+  // If timestamp lacks timezone marker, default to UTC for deterministic storage.
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(normalized)) {
+    normalized = `${normalized}Z`;
+  }
+
   const parsed = new Date(normalized);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }

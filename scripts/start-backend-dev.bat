@@ -16,6 +16,10 @@ if not exist "%ENV_EXAMPLE%" (
   exit /b 1
 )
 
+if defined POSTGRES_HOST_PORT (
+  set "DATABASE_URL=postgresql://postgres:postgres@localhost:%POSTGRES_HOST_PORT%/moschops"
+)
+
 if /I "%~1"=="--check" (
   echo [backend-dev] Ready. Backend folder found at "%BACKEND_DIR%".
   exit /b 0

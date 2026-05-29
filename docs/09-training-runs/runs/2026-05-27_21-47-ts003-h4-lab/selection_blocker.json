@@ -1,0 +1,28 @@
+﻿{
+    "generatedAtUtc":  "2026-05-27T20:49:38.4884175Z",
+    "reason":  "No development run satisfied hard feasibility constraints; holdout run was blocked.",
+    "feasibilityRules":  {
+                             "targetMaxDrawdownPct":  -15,
+                             "targetMinMedianTrades":  120
+                         },
+    "allowFallbackSelection":  false,
+    "devRunsEvaluated":  18,
+    "feasibleDevRuns":  0,
+    "feasibilityGapDiagnostics":  [
+                                      {
+                                          "variant":  "trend-follow",
+                                          "maxTradesObserved":  63,
+                                          "tradeCountShortfallVsTarget":  57,
+                                          "bestObservedMaxDrawdownPct":  -3.6202,
+                                          "bestObservedNetReturnPct":  0.2703
+                                      },
+                                      {
+                                          "variant":  "regime-split",
+                                          "maxTradesObserved":  40,
+                                          "tradeCountShortfallVsTarget":  80,
+                                          "bestObservedMaxDrawdownPct":  -0.8036,
+                                          "bestObservedNetReturnPct":  8.3288
+                                      }
+                                  ],
+    "nextAction":  "Revise feature/risk setup and rerun; do not tune on holdout."
+}

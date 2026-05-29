@@ -28,10 +28,15 @@ From `backend/`:
 npm run build
 set -a && source .env && set +a
 npm run test
+npm run test:db
 npm run lint
 ```
 
 Notes:
+- `npm run test` runs fast, default checks and skips DB-dependent suites unless `RUN_DB_TESTS=true`.
+- `npm run test:db` enables DB-backed integration tests and requires PostgreSQL (`docker compose up -d postgres`).
+- File-based observability is written to `backend/logs/` by category (`http`, `startup`, `error`, `model`, `news`, `training`, `audit`, `security`, `db`).
+- Set `LOG_DIR` in `.env` if you want a different log root; the default is `logs` under the backend working directory.
 - `POST /signal` requires `marketSnapshot.volatility` as rolling volatility input.
 - Startup performs ONNX model preflight; check `GET /health` telemetry for `modelLoader` state.
 - `POST /portfolio/evaluate` persists decisions atomically and is replay-safe via request hash or `portfolioDecisionId`.

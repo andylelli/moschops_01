@@ -1,7 +1,7 @@
 # API Contract Specification
 
 Version: 1.0  
-Last updated: 2026-05-23
+Last updated: 2026-05-26
 
 ## Purpose
 Define the backend HTTP contract used by the EA, backend services, and dashboard.
@@ -102,6 +102,23 @@ Persistence and idempotency semantics:
 - Evaluation results are persisted atomically (decision + decision items).
 - Replays with matching request payload return the existing `portfolioDecisionId` and cached result.
 - If `portfolioDecisionId` is supplied and already exists, cached result is returned.
+
+### GET /portfolio/summary
+Returns live portfolio observability aggregates for dashboard risk/exposure surfaces.
+
+Query fields:
+- maxOpenRisk (default `0.04`)
+- maxOpenTrades (default `6`)
+- lookback (default `200`, range `20-1000`)
+
+Response fields:
+- generatedAtUtc
+- sourceDecisionId
+- exposureBySymbol[]: `symbol`, `count`, `sharePct`, `assetClass`
+- openRiskBudget: `maxOpenRisk`, `remainingRiskBudget`, `consumedRiskBudget`, `consumedPct`
+- tradeSlots: `maxOpenTrades`, `remainingTradeSlots`, `consumedTradeSlots`, `consumedPct`
+- vetoBreakdownTop[]: `reasonCode`, `count`
+- correlationConcentration: `flaggedCount`, `totalRejected`, `ratioPct`
 
 ### POST /log-signal
 Persists accepted or rejected signal records.
@@ -302,6 +319,123 @@ Execution behavior:
 Diagnostics behavior:
 - If `models/training_report.json` includes diagnostics artifacts, they are persisted into `metricsJson.diagnostics`.
 - If diagnostics are missing in artifact input, backend persists deterministic fallback diagnostics derived from achieved AUC/Brier/calibration values so UI diagnostics remain available.
+
+### GET /incidents
+Returns timeline-ready incident events and acknowledgement state for operations/runbook workflows.
+
+Query fields:
+- limit (default `50`, max `200`)
+
+Response fields:
+- count
+- items[]: `incidentId`, `severity`, `eventType`, `reasonCode`, `summary`, `createdAtUtc`, `runbookId`, `acknowledged`, `acknowledgedBy`, `acknowledgedAtUtc`, `latestNote`
+
+### POST /incidents/:incidentId/acknowledge
+Creates an auditable incident acknowledgement record linked to a source incident event.
+
+Request fields:
+- actor
+- note (min 5 chars)
+
+Response fields:
+- ok
+- incidentId
+- acknowledgedBy
+- note
+- acknowledgedAtUtc
+
+Error behavior:
+- `404 NOT_FOUND` when incidentId is unknown
+
+### GET /admin/approvals
+Returns approval queue entries for promotion/rollback/disable workflows.
+
+Query fields:
+- state (`PENDING|APPROVED|REJECTED|ALL`, default `ALL`)
+- limit (default 50, max 200)
+
+Response fields:
+- count
+- items[]: `approvalId`, `actionType`, `actionLabel`, `owner`, `scope`, `requestedBy`, `requestedAtUtc`, `state`, `decisionActor`, `decisionReason`, `decidedAtUtc`, `strategyId`, `strategyVersion`
+
+### POST /admin/approvals/submit
+Creates a pending approval request and persists an auditable submission event.
+
+Request fields:
+- actionType
+- actionLabel
+- owner
+- scope
+- requestedBy
+- reason (min 10 chars)
+- strategyId (optional)
+- strategyVersion (optional)
+
+Response fields:
+- ok
+- approval (same item shape as `GET /admin/approvals`)
+
+### POST /admin/approvals/:approvalId/approve
+Marks a pending approval as approved and persists a decision event.
+
+Request fields:
+- actor
+- reason (min 10 chars)
+
+Response fields:
+- ok
+- approval (updated state)
+
+### POST /admin/approvals/:approvalId/reject
+Marks a pending approval as rejected and persists a decision event.
+
+Request fields:
+- actor
+- reason (min 10 chars)
+
+Response fields:
+- ok
+- approval (updated state)
+
+Error behavior:
+- `404 NOT_FOUND` when approvalId is unknown
+- `409 ALREADY_DECIDED` when approval has already been resolved
+
+### GET /admin/audit-log
+Returns admin control-plane audit events (approval submissions, approval decisions, config rollbacks).
+
+Query fields:
+- actor (optional)
+- actionType (optional)
+- limit (default 100, max 500)
+
+Response fields:
+- count
+- items[]: `eventId`, `eventType`, `reasonCode`, `severity`, `actor`, `actionType`, `reason`, `createdAtUtc`, `details`
+
+### GET /admin/config-snapshots
+Returns persisted strategy configuration snapshots for rollback and review.
+
+Query fields:
+- strategyId (default `daily-breakout-5-10`)
+- strategyVersion (default `1.0.0`)
+- limit (default 20, max 100)
+
+Response fields:
+- count
+- items[]: `id`, `strategyId`, `strategyVersion`, `riskProfile`, `createdAtUtc`, `config`
+
+### POST /admin/config-snapshots/rollback
+Creates a new strategy config snapshot by cloning a prior snapshot and records rollback audit metadata.
+
+Request fields:
+- configId
+- actor
+- reason (min 10 chars)
+
+Response fields:
+- ok
+- snapshot (`id`, `strategyId`, `strategyVersion`, `riskProfile`, `createdAtUtc`, `config`)
 
 ## Idempotency
 - decisionKey = strategyId + symbol + timeframe + barCloseTimeUtc

@@ -1,5 +1,13 @@
-import "dotenv/config";
 import { z } from "zod";
+import { recordFileLog } from "../services/file-log";
+
+try {
+  // Use CJS require for runtime compatibility in vitest/node24 contexts.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  require("dotenv").config();
+} catch {
+  // Ignore dotenv load failures; process env may be injected by host/runtime.
+}
 
 function parseBooleanLike(value: unknown): boolean {
   if (typeof value === "boolean") {
@@ -45,6 +53,8 @@ const EnvSchema = z.object({
   NEWS_STALE_MINUTES: z.coerce.number().int().min(5).default(30),
   NEWS_DEGRADED_MINUTES: z.coerce.number().int().min(5).default(15),
   NEWS_ENABLED_SYMBOLS: z.string().default("EURUSD,GBPUSD,USDJPY,XAUUSD"),
+  LOG_DIR: z.string().default("../logs/backend"),
+  LOG_TO_FILES: z.preprocess(parseBooleanLike, z.boolean()).default(true),
   TRAINING_PYTHON_EXECUTABLE: z.string().optional(),
   TRAINING_TIMEOUT_SECONDS: z.coerce.number().int().min(30).max(1800).default(600),
 });
@@ -62,6 +72,15 @@ function parseEnv(): Env {
   const result = EnvSchema.safeParse(process.env);
 
   if (!result.success) {
+    recordFileLog({
+      category: "startup",
+      level: "error",
+      event: "env_validation_failed",
+      message: "Invalid environment configuration",
+      context: {
+        issues: result.error.issues.map((issue) => ({ path: issue.path.join("."), message: issue.message })),
+      },
+    });
     console.error("❌ Invalid environment configuration:");
     result.error.issues.forEach((err) => {
       const path = err.path.join(".");

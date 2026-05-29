@@ -82,9 +82,13 @@ scripts\deploy-ea-to-mt5.bat "C:\Users\USER\AppData\Roaming\MetaQuotes\Terminal\
 
 4. Compile and attach EA from MQL5/Experts/DailyBreakoutEA.mq5 in MetaEditor.
 5. In MT5 options, enable Algo Trading.
-6. In MT5 options, enable WebRequest and allow backend base URL.
-7. Verify EA payload includes required marketSnapshot.volatility value.
-8. Run controlled dry test and confirm backend receives signal and risk-check requests.
+6. In MT5 options, enable WebRequest and allow the backend base URL used by the EA.
+	- Add `http://127.0.0.1:3000` if the backend runs locally.
+	- Add `http://localhost:3000` only if you switch the EA base URL to that form.
+	- Add your selected backend host if you run it on another machine.
+7. Verify the EA payload includes the required `marketSnapshot.volatility` value.
+8. Run a controlled dry test and confirm the backend receives both `/signal` and `/trades/open` requests.
+9. Check the MT5 Journal for `WebRequest` success or failure messages.
 
 Credentials note:
 

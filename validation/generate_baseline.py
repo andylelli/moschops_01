@@ -41,8 +41,8 @@ def main():
     report = generate_report(params, stats, trades)
 
     output_path = Path(__file__).parent / "baseline.md"
-    output_path.write_text(report)
-    print(f"✅ Report saved to {output_path}")
+    output_path.write_text(report, encoding="utf-8")
+    print(f"Report saved to {output_path}")
 
 if __name__ == "__main__":
     main()

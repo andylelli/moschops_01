@@ -1,0 +1,48 @@
+﻿{
+    "generatedAtUtc":  "2026-05-27T20:46:41.5126325Z",
+    "reportPath":  "C:\\moschops_01\\docs\\09-training-runs\\runs\\2026-05-27_21-45-ts003-h4-lab\\regime-split-R06-dev\\artifacts\\historical_split_report.json",
+    "thresholds":  {
+                       "maxDrawdownPct":  -15,
+                       "minTrades":  120,
+                       "minProfitFactor":  1.05,
+                       "minNetReturnPct":  0,
+                       "minStressNetReturnPct":  0
+                   },
+    "gates":  {
+                  "dataAndLineage":  {
+                                         "pass":  true,
+                                         "details":  {
+                                                         "trainFetched":  12216,
+                                                         "testFetched":  3125,
+                                                         "foldsUsed":  6,
+                                                         "modelPath":  "C:\\moschops_01\\docs\\09-training-runs\\runs\\2026-05-27_21-45-ts003-h4-lab\\regime-split-R06-dev\\artifacts\\historical_split_model.onnx"
+                                                     }
+                                     },
+                  "statisticalRobustness":  {
+                                                "pass":  false,
+                                                "details":  {
+                                                                "constraintsSatisfied":  false,
+                                                                "selectionMode":  "fallback-risk-first"
+                                                            }
+                                            },
+                  "tradingRisk":  {
+                                      "pass":  false,
+                                      "details":  {
+                                                      "totalTrades":  20,
+                                                      "profitFactor":  2.1627967886026607,
+                                                      "maxDrawdownPct":  -0.803638008564278,
+                                                      "netReturnPct":  3.5003554569313144,
+                                                      "stressNetReturnPct":  2.8003554569313165
+                                                  }
+                                  },
+                  "operationalReliability":  {
+                                                 "pass":  false,
+                                                 "details":  "Not evaluated in this script; fail-closed."
+                                             },
+                  "liveReadiness":  {
+                                        "pass":  false,
+                                        "details":  "Not evaluated in this script; fail-closed."
+                                    }
+              },
+    "decision":  "REJECT"
+}

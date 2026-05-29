@@ -7,21 +7,31 @@ import { env } from "../utils/env";
 
 export async function healthRoutes(app: FastifyInstance): Promise<void> {
   app.get("/health", async () => {
+    const shouldProbeDatabase = env.NODE_ENV !== "test" || process.env.RUN_DB_TESTS === "true";
+
     let db = "up";
-    try {
-      await prismaClient().$queryRaw`SELECT 1`;
-    } catch {
+    if (!shouldProbeDatabase) {
       db = "down";
+    } else {
+      try {
+        await prismaClient().$queryRaw`SELECT 1`;
+      } catch {
+        db = "down";
+      }
     }
 
     const modelStatus = getModelLoaderStatus();
     let providerStatus: NewsProviderStatus | null = null;
 
-    try {
-      providerStatus = await prismaClient().newsProviderStatus.findUnique({
-        where: { provider: NEWS_PROVIDER },
-      });
-    } catch {
+    if (shouldProbeDatabase) {
+      try {
+        providerStatus = await prismaClient().newsProviderStatus.findUnique({
+          where: { provider: NEWS_PROVIDER },
+        });
+      } catch {
+        providerStatus = null;
+      }
+    } else {
       providerStatus = null;
     }
 

@@ -1,5 +1,7 @@
 import { library } from '@fortawesome/fontawesome-svg-core'
 import {
+  faArrowTrendDown,
+  faArrowTrendUp,
   faArrowRightArrowLeft,
   faBell,
   faBolt,
@@ -21,10 +23,13 @@ import {
   faSun,
   faTriangleExclamation,
   faMoon,
+  faMinus,
   faUserShield,
 } from '@fortawesome/free-solid-svg-icons'
 
 library.add(
+  faArrowTrendDown,
+  faArrowTrendUp,
   faArrowRightArrowLeft,
   faBell,
   faBolt,
@@ -46,5 +51,6 @@ library.add(
   faSun,
   faTriangleExclamation,
   faMoon,
+  faMinus,
   faUserShield,
 )

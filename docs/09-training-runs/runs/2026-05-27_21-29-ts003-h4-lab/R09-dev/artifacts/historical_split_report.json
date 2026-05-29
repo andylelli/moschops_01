@@ -1,0 +1,438 @@
+{
+  "generatedAtUtc": "2026-05-27T20:30:27.715225+00:00",
+  "baseUrl": "http://127.0.0.1:3000",
+  "source": "FMP",
+  "symbol": "EURUSD",
+  "timeframe": "H4",
+  "trainWindow": {
+    "start": "2014-05-28",
+    "end": "2022-05-27"
+  },
+  "testWindow": {
+    "start": "2022-05-28",
+    "end": "2024-05-27"
+  },
+  "horizonBars": 9,
+  "walkForwardFolds": 7,
+  "embargoBars": 10,
+  "costAssumptions": {
+    "spreadBps": 2.0,
+    "slippageBps": 1.0,
+    "commissionBps": 0.5,
+    "totalCostPerTrade": 0.00035,
+    "stressCostMultiplier": 2.0,
+    "stressCostPerTrade": 0.0007
+  },
+  "walkForwardSelection": {
+    "foldsUsed": 7,
+    "thresholdDiagnostics": [
+      {
+        "threshold": 0.45,
+        "foldCount": 7,
+        "medianNetReturnPct": -25.553251413343215,
+        "medianProfitFactor": 0.7945088250530242,
+        "medianMaxDrawdownPct": -39.6968888317579,
+        "medianTrades": 701.0
+      },
+      {
+        "threshold": 0.5,
+        "foldCount": 7,
+        "medianNetReturnPct": -33.62166629978046,
+        "medianProfitFactor": 0.6804263617019233,
+        "medianMaxDrawdownPct": -38.102670247487836,
+        "medianTrades": 523.0
+      },
+      {
+        "threshold": 0.55,
+        "foldCount": 7,
+        "medianNetReturnPct": 0.1067916102453304,
+        "medianProfitFactor": 3.340841834132462,
+        "medianMaxDrawdownPct": 0.0,
+        "medianTrades": 2.0
+      },
+      {
+        "threshold": 0.6,
+        "foldCount": 7,
+        "medianNetReturnPct": 0.0,
+        "medianProfitFactor": 0.0,
+        "medianMaxDrawdownPct": 0.0,
+        "medianTrades": 0.0
+      }
+    ],
+    "selectedThreshold": 0.55,
+    "selectionMode": "fallback-risk-first",
+    "constraintsSatisfied": false,
+    "feasibilityRules": {
+      "targetMaxDrawdownPct": -15.0,
+      "targetMinMedianTrades": 120.0
+    },
+    "foldSummaries": [
+      {
+        "fold": 1,
+        "trainRows": 714,
+        "validationRows": 724,
+        "embargoBars": 10,
+        "thresholdMetrics": {
+          "0.45": {
+            "totalTrades": 223,
+            "winRate": 0.6053811659192825,
+            "netReturnPct": 39.48160862931681,
+            "profitFactor": 2.4691598168498143,
+            "maxDrawdownPct": -7.342618918365618,
+            "sharpeApprox": 2.278643390067148,
+            "avgTradeReturnPct": 0.17704757232877494
+          },
+          "0.50": {
+            "totalTrades": 139,
+            "winRate": 0.5899280575539568,
+            "netReturnPct": 28.705919898267005,
+            "profitFactor": 2.806722913737343,
+            "maxDrawdownPct": -6.363135390576602,
+            "sharpeApprox": 2.5066566666409327,
+            "avgTradeReturnPct": 0.20651740934005042
+          },
+          "0.55": {
+            "totalTrades": 81,
+            "winRate": 0.6419753086419753,
+            "netReturnPct": 20.315602783003666,
+            "profitFactor": 3.340841834132462,
+            "maxDrawdownPct": -4.636025523246601,
+            "sharpeApprox": 2.9142919884430163,
+            "avgTradeReturnPct": 0.2508099109012798
+          },
+          "0.60": {
+            "totalTrades": 43,
+            "winRate": 0.5813953488372093,
+            "netReturnPct": 7.426112000825559,
+            "profitFactor": 2.1915395930220063,
+            "maxDrawdownPct": -5.2879214029617145,
+            "sharpeApprox": 1.9196610679601225,
+            "avgTradeReturnPct": 0.17270027908896649
+          }
+        }
+      },
+      {
+        "fold": 2,
+        "trainRows": 1438,
+        "validationRows": 724,
+        "embargoBars": 10,
+        "thresholdMetrics": {
+          "0.45": {
+            "totalTrades": 662,
+            "winRate": 0.48489425981873113,
+            "netReturnPct": -67.86276327262159,
+            "profitFactor": 0.6191298886669477,
+            "maxDrawdownPct": -56.73658411916467,
+            "sharpeApprox": -0.7573030343349325,
+            "avgTradeReturnPct": -0.10251172699791782
+          },
+          "0.50": {
+            "totalTrades": 602,
+            "winRate": 0.49667774086378735,
+            "netReturnPct": -58.90706778006476,
+            "profitFactor": 0.6340072662022201,
+            "maxDrawdownPct": -53.15455035277318,
+            "sharpeApprox": -0.6982473623779601,
+            "avgTradeReturnPct": -0.09785227205990825
+          },
+          "0.55": {
+            "totalTrades": 521,
+            "winRate": 0.5182341650671785,
+            "netReturnPct": -7.586359987111519,
+            "profitFactor": 0.9245780199576878,
+            "maxDrawdownPct": -28.833052546051498,
+            "sharpeApprox": -0.13846925332247093,
+            "avgTradeReturnPct": -0.014561151606739958
+          },
+          "0.60": {
+            "totalTrades": 292,
+            "winRate": 0.5,
+            "netReturnPct": 12.040324101085066,
+            "profitFactor": 1.298742781364035,
+            "maxDrawdownPct": -12.269377924476377,
+            "sharpeApprox": 0.7255505390587776,
+            "avgTradeReturnPct": 0.041233986647551596
+          }
+        }
+      },
+      {
+        "fold": 3,
+        "trainRows": 2162,
+        "validationRows": 724,
+        "embargoBars": 10,
+        "thresholdMetrics": {
+          "0.45": {
+            "totalTrades": 592,
+            "winRate": 0.4239864864864865,
+            "netReturnPct": -25.553251413343215,
+            "profitFactor": 0.7945088250530242,
+            "maxDrawdownPct": -33.26766547440017,
+            "sharpeApprox": -0.5957467003084039,
+            "avgTradeReturnPct": -0.04316427603605273
+          },
+          "0.50": {
+            "totalTrades": 523,
+            "winRate": 0.39579349904397704,
+            "netReturnPct": -33.62166629978046,
+            "profitFactor": 0.6804263617019233,
+            "maxDrawdownPct": -38.102670247487836,
+            "sharpeApprox": -1.0191347545586886,
+            "avgTradeReturnPct": -0.06428616883323224
+          },
+          "0.55": {
+            "totalTrades": 255,
+            "winRate": 0.3137254901960784,
+            "netReturnPct": -36.09987638684035,
+            "profitFactor": 0.33000884700745375,
+            "maxDrawdownPct": -30.750410858369193,
+            "sharpeApprox": -2.8033562786032693,
+            "avgTradeReturnPct": -0.14156814269349158
+          },
+          "0.60": {
+            "totalTrades": 14,
+            "winRate": 0.35714285714285715,
+            "netReturnPct": -2.1600727156041426,
+            "profitFactor": 0.25335067197133015,
+            "maxDrawdownPct": -2.6540502222067053,
+            "sharpeApprox": -2.86882049397127,
+            "avgTradeReturnPct": -0.15429090825743874
+          }
+        }
+      },
+      {
+        "fold": 4,
+        "trainRows": 2886,
+        "validationRows": 724,
+        "embargoBars": 10,
+        "thresholdMetrics": {
+          "0.45": {
+            "totalTrades": 701,
+            "winRate": 0.5805991440798859,
+            "netReturnPct": 66.50662983987672,
+            "profitFactor": 1.5793917044633508,
+            "maxDrawdownPct": -24.199729571225358,
+            "sharpeApprox": 1.326682282367897,
+            "avgTradeReturnPct": 0.09487393700410375
+          },
+          "0.50": {
+            "totalTrades": 314,
+            "winRate": 0.5796178343949044,
+            "netReturnPct": 24.587849078903503,
+            "profitFactor": 1.4905798309812517,
+            "maxDrawdownPct": -18.538264360124103,
+            "sharpeApprox": 1.1492322942547724,
+            "avgTradeReturnPct": 0.07830525184364172
+          },
+          "0.55": {
+            "totalTrades": 1,
+            "winRate": 1.0,
+            "netReturnPct": 0.8379314672225375,
+            "profitFactor": 999.0,
+            "maxDrawdownPct": 0.0,
+            "sharpeApprox": 0.0,
+            "avgTradeReturnPct": 0.8379314672225375
+          },
+          "0.60": {
+            "totalTrades": 0,
+            "winRate": 0.0,
+            "netReturnPct": 0.0,
+            "profitFactor": 0.0,
+            "maxDrawdownPct": 0.0,
+            "sharpeApprox": 0.0,
+            "avgTradeReturnPct": 0.0
+          }
+        }
+      },
+      {
+        "fold": 5,
+        "trainRows": 3610,
+        "validationRows": 724,
+        "embargoBars": 10,
+        "thresholdMetrics": {
+          "0.45": {
+            "totalTrades": 714,
+            "winRate": 0.5196078431372549,
+            "netReturnPct": -11.028601026462335,
+            "profitFactor": 0.9186602962717011,
+            "maxDrawdownPct": -39.6968888317579,
+            "sharpeApprox": -0.2214062308367829,
+            "avgTradeReturnPct": -0.015446219925017275
+          },
+          "0.50": {
+            "totalTrades": 572,
+            "winRate": 0.5122377622377622,
+            "netReturnPct": -15.796988990563769,
+            "profitFactor": 0.8564337226974253,
+            "maxDrawdownPct": -33.85234142802162,
+            "sharpeApprox": -0.405787433613712,
+            "avgTradeReturnPct": -0.027617113619866726
+          },
+          "0.55": {
+            "totalTrades": 2,
+            "winRate": 1.0,
+            "netReturnPct": 0.1067916102453304,
+            "profitFactor": 999.0,
+            "maxDrawdownPct": 0.0,
+            "sharpeApprox": 8.838017538844626,
+            "avgTradeReturnPct": 0.0533958051226652
+          },
+          "0.60": {
+            "totalTrades": 0,
+            "winRate": 0.0,
+            "netReturnPct": 0.0,
+            "profitFactor": 0.0,
+            "maxDrawdownPct": 0.0,
+            "sharpeApprox": 0.0,
+            "avgTradeReturnPct": 0.0
+          }
+        }
+      },
+      {
+        "fold": 6,
+        "trainRows": 4334,
+        "validationRows": 724,
+        "embargoBars": 10,
+        "thresholdMetrics": {
+          "0.45": {
+            "totalTrades": 724,
+            "winRate": 0.39226519337016574,
+            "netReturnPct": -82.25077117015226,
+            "profitFactor": 0.44479333053769227,
+            "maxDrawdownPct": -57.78438677367803,
+            "sharpeApprox": -2.153743360460584,
+            "avgTradeReturnPct": -0.1136060375278346
+          },
+          "0.50": {
+            "totalTrades": 624,
+            "winRate": 0.3958333333333333,
+            "netReturnPct": -65.83123092322451,
+            "profitFactor": 0.4637411391866817,
+            "maxDrawdownPct": -48.64086359315759,
+            "sharpeApprox": -2.0295545326121776,
+            "avgTradeReturnPct": -0.1054987675051675
+          },
+          "0.55": {
+            "totalTrades": 0,
+            "winRate": 0.0,
+            "netReturnPct": 0.0,
+            "profitFactor": 0.0,
+            "maxDrawdownPct": 0.0,
+            "sharpeApprox": 0.0,
+            "avgTradeReturnPct": 0.0
+          },
+          "0.60": {
+            "totalTrades": 0,
+            "winRate": 0.0,
+            "netReturnPct": 0.0,
+            "profitFactor": 0.0,
+            "maxDrawdownPct": 0.0,
+            "sharpeApprox": 0.0,
+            "avgTradeReturnPct": 0.0
+          }
+        }
+      },
+      {
+        "fold": 7,
+        "trainRows": 5058,
+        "validationRows": 724,
+        "embargoBars": 10,
+        "thresholdMetrics": {
+          "0.45": {
+            "totalTrades": 710,
+            "winRate": 0.4126760563380282,
+            "netReturnPct": -67.4202065233005,
+            "profitFactor": 0.6712440890881091,
+            "maxDrawdownPct": -64.04482445270285,
+            "sharpeApprox": -1.072071081075418,
+            "avgTradeReturnPct": -0.09495803735676125
+          },
+          "0.50": {
+            "totalTrades": 431,
+            "winRate": 0.382830626450116,
+            "netReturnPct": -60.36993392524443,
+            "profitFactor": 0.5332012207539674,
+            "maxDrawdownPct": -54.956643076091005,
+            "sharpeApprox": -1.6806369403121981,
+            "avgTradeReturnPct": -0.1400694522627481
+          },
+          "0.55": {
+            "totalTrades": 1,
+            "winRate": 1.0,
+            "netReturnPct": 0.15775935958980028,
+            "profitFactor": 999.0,
+            "maxDrawdownPct": 0.0,
+            "sharpeApprox": 0.0,
+            "avgTradeReturnPct": 0.15775935958980028
+          },
+          "0.60": {
+            "totalTrades": 0,
+            "winRate": 0.0,
+            "netReturnPct": 0.0,
+            "profitFactor": 0.0,
+            "maxDrawdownPct": 0.0,
+            "sharpeApprox": 0.0,
+            "avgTradeReturnPct": 0.0
+          }
+        }
+      }
+    ]
+  },
+  "downloadJob": {
+    "id": "cmpoiqib00krtchipya0xsq49",
+    "status": "COMPLETED",
+    "source": "FMP",
+    "symbol": "EURUSD",
+    "timeframe": "H4",
+    "fromDate": "2014-05-28T00:00:00.000Z",
+    "toDate": "2024-05-27T23:59:59.999Z",
+    "barsFetched": 392,
+    "barsInserted": 0,
+    "barsSkipped": 392,
+    "requestedAtUtc": "2026-05-27T20:30:26.595Z",
+    "completedAtUtc": "2026-05-27T20:30:27.276Z"
+  },
+  "bars": {
+    "trainFetched": 6000,
+    "testFetched": 2000,
+    "trainFeatureRows": 5792,
+    "testFeatureRows": 1792
+  },
+  "metrics": {
+    "auc": 0.5461175936956381,
+    "accuracy": 0.5100446428571429,
+    "precision": 0.0,
+    "recall": 0.0,
+    "brier": 0.24880427260045793,
+    "testPositiveRate": 0.48995535714285715,
+    "predictedPositiveRate": 0.0,
+    "selectedThreshold": 0.55
+  },
+  "strategyBacktest": {
+    "totalTrades": 0,
+    "winRate": 0.0,
+    "netReturnPct": 0.0,
+    "profitFactor": 0.0,
+    "maxDrawdownPct": 0.0,
+    "sharpeApprox": 0.0,
+    "avgTradeReturnPct": 0.0
+  },
+  "strategyBacktestNoCost": {
+    "totalTrades": 0,
+    "winRate": 0.0,
+    "netReturnPct": 0.0,
+    "profitFactor": 0.0,
+    "maxDrawdownPct": 0.0,
+    "sharpeApprox": 0.0,
+    "avgTradeReturnPct": 0.0
+  },
+  "strategyBacktestStressCost": {
+    "totalTrades": 0,
+    "winRate": 0.0,
+    "netReturnPct": 0.0,
+    "profitFactor": 0.0,
+    "maxDrawdownPct": 0.0,
+    "sharpeApprox": 0.0,
+    "avgTradeReturnPct": 0.0
+  },
+  "modelPath": "C:\\moschops_01\\docs\\09-training-runs\\runs\\2026-05-27_21-29-ts003-h4-lab\\R09-dev\\artifacts\\historical_split_model.onnx"
+}

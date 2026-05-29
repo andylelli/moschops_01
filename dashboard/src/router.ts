@@ -21,11 +21,27 @@ const routes = [
   { path: '/risk-safety', component: RiskSafetyView },
   { path: '/system-health', component: SystemHealthView },
   { path: '/incidents-runbooks', component: IncidentsRunbooksView },
-  { path: '/admin', component: AdminView },
+  { path: '/admin', component: AdminView, meta: { allowedRoles: ['analyst', 'admin'] } },
   { path: '/settings', component: SettingsView },
 ]
 
-export default createRouter({
+const router = createRouter({
   history: createWebHistory(),
   routes,
 })
+
+router.beforeEach((to) => {
+  const allowedRoles = Array.isArray(to.meta.allowedRoles) ? (to.meta.allowedRoles as string[]) : null
+  if (!allowedRoles) {
+    return true
+  }
+
+  const activeRole = localStorage.getItem('moschops-role') ?? 'analyst'
+  if (allowedRoles.includes(activeRole)) {
+    return true
+  }
+
+  return '/overview'
+})
+
+export default router

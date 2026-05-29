@@ -90,14 +90,31 @@ Use `training/spread_sim.py` (P3) to simulate variable spreads at event bar indi
 
 This provides a more realistic cost model than constant spread assumptions.
 
+## Run report — required after every experiment
+
+After each training and test run, a `run_report.md` **must** be written to the run directory before the experiment is logged in `11_experiment_log.md`.
+
+**Steps:**
+1. Copy the template from `logs/training/run_report_template.md` into the run directory as `run_report.md`.
+2. Fill all `{{PLACEHOLDER}}` fields from `report.json`, `run_config.json`, and the terminal output.
+3. Complete the Scorecard (each aspect scored 1–10 with a one-line rationale).
+4. Complete the Gate Assessment table.
+5. Write a Root Cause Analysis (minimum 2 bullet points for failing runs).
+6. Commit `run_report.md` alongside the other run artefacts.
+
+The run report is the human-readable companion to `report.json`. It is the primary document reviewed when deciding whether to proceed to the next experiment.
+
+**Reference example:** `logs/training/2026-05-29/164822_EURUSD_H4_exp-001/run_report.md`
+
 ## Validation artefacts required per run
 
 | Artefact | Required for holdout? | Notes |
 |---|---|---|
-| `historical_split_report.json` | Yes | Full metric table |
+| `run_report.md` | Yes | Scored human-readable report (see template above) |
+| `report.json` | Yes | Full metric table (machine-readable source of truth) |
 | `feature_schema.json` | Yes | Confirm no feature leakage |
-| Per-fold metric table | Yes | CSV or JSON |
-| Cost model section | Yes | Must show base and stress cost rows |
+| Per-fold metric table | Yes | Embedded in `report.json` `walkForwardSelection.foldSummaries` |
+| Cost model section | Yes | Must show base, no-cost, and stress cost rows |
 | PBO calculation | Yes (EXP-004+) | From `cpcv.py` |
 | Monte Carlo summary | Yes (EXP-004+) | From `mc_simulation.py` |
 | Shadow trader report | No | Nice-to-have from EXP-001+ |

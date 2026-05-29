@@ -76,3 +76,6 @@ When overriding docs, add a short rationale section titled "Change Rationale" in
 - Be concise and explicit.
 - Call out assumptions, risks, and unresolved dependencies.
 - Always reference changed file paths in updates.
+
+# IMPORTANT
+NEVER CURVE FIT!!!!!!

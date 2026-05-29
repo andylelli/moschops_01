@@ -26,6 +26,16 @@ export const RISK_LIMITS = {
   // Daily/weekly loss limits
   dailyLossLimitPct: 0.03,      // 3% daily loss cap
   weeklyLossLimitPct: 0.06,     // 6% weekly loss cap
+
+  // Circuit breaker — consecutive loss trip threshold
+  maxConsecutiveLosses: 5,      // Trip after 5 consecutive losing trades
+
+  // Regime gate — AI threshold bumps on elevated volatility
+  regimeGate: {
+    bumpMild: 0.02,             // vol_regime > 1.5 → +0.02 to AI threshold
+    bumpElevated: 0.04,         // vol_regime > 2.0 → +0.04 to AI threshold
+    bumpExtreme: 0.06,          // vol_regime > 3.0 → +0.06 to AI threshold
+  },
 } as const;
 
 /**

@@ -91,7 +91,7 @@ def cusum_events(
     n = len(close)
 
     if h is None:
-        thresholds = log_ret.rolling(h_lookback, min_periods=2).std().fillna(log_ret.std())
+        thresholds = log_ret.rolling(h_lookback, min_periods=h_lookback).std().fillna(log_ret.std())
     else:
         thresholds = pd.Series(np.full(n, float(h)), index=close.index)
 
@@ -114,4 +114,4 @@ def cusum_events(
             s_neg = 0.0
             events.append(close.index[i])
 
-    return close.index.__class__(events)
+    return pd.Index(events)

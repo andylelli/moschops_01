@@ -11,6 +11,8 @@ import { evaluateNewsPolicy } from "../services/news-policy";
 import { isEntryAction } from "../services/news-domain";
 import { buildInferenceFeatures } from "../services/feature-schema";
 import { loadStrategyRuntimeProfile } from "../services/strategy-config";
+import { checkCircuitBreaker } from "../services/circuit-breaker";
+import { recordBarVolatility, getRegimeStatus } from "../services/regime-gate";
 
 const signalSchema = z.object({
   decisionId: z.string().min(1),
@@ -76,6 +78,19 @@ export async function signalRoutes(app: FastifyInstance): Promise<void> {
     const aiReasons: string[] = [];
     let sizeBucket: "FULL" | "HALF" | "SKIP" = "FULL";
 
+    // --- Regime Gate: record volatility and derive adjusted AI thresholds ---
+    recordBarVolatility(input.strategyId, input.symbol, input.timeframe, input.marketSnapshot.volatility);
+    const regimeStatus = getRegimeStatus(input.strategyId, input.symbol, input.timeframe);
+    const regimeBump = regimeStatus.thresholdBump;
+    const effectiveThresholds = {
+      full: aiThresholds.full + regimeBump,
+      half: aiThresholds.half + regimeBump,
+    };
+    if (regimeBump > 0) {
+      aiReasons.push(`REGIME_GATE:${regimeStatus.regimeLabel}:bump=${regimeBump.toFixed(2)}`);
+    }
+    // -----------------------------------------------------------------------
+
     if (inference.status === "MODEL_UNAVAILABLE") {
       aiReasons.push("AI_MODEL_UNAVAILABLE");
     }
@@ -89,10 +104,10 @@ export async function signalRoutes(app: FastifyInstance): Promise<void> {
     }
 
     if (typeof inferredScore === "number") {
-      if (inferredScore >= aiThresholds.full) {
+      if (inferredScore >= effectiveThresholds.full) {
         sizeBucket = "FULL";
         aiReasons.push("AI_SCORE_APPLIED");
-      } else if (inferredScore >= aiThresholds.half) {
+      } else if (inferredScore >= effectiveThresholds.half) {
         sizeBucket = "HALF";
         aiReasons.push("AI_HALF_SIZE");
         aiReasons.push("AI_SCORE_APPLIED");
@@ -107,6 +122,23 @@ export async function signalRoutes(app: FastifyInstance): Promise<void> {
       sizeBucket = "SKIP";
       aiReasons.push("AI_MANDATORY_BLOCK");
     }
+
+    // --- Circuit Breaker: daily/weekly loss limits and consecutive losses ---
+    const cbStatus = checkCircuitBreaker(
+      input.strategyId,
+      input.accountSnapshot.dailyLossPct ?? 0,
+      input.accountSnapshot.weeklyLossPct ?? 0,
+      RISK_LIMITS.maxConsecutiveLosses,
+      RISK_LIMITS.dailyLossLimitPct,
+      RISK_LIMITS.weeklyLossLimitPct,
+    );
+    if (cbStatus.tripped) {
+      sizeBucket = "SKIP";
+      for (const reason of cbStatus.reasons) {
+        aiReasons.push(reason);
+      }
+    }
+    // -----------------------------------------------------------------------
 
     const riskApproved = risk.approved && newsPolicy.policyAction !== "BLOCK_NEW";
 
